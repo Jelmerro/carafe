@@ -16,7 +16,7 @@ carafe is a tiny management tool for wine ~~bottles~~ carafes.
 
 ## Note
 
-#### The current command-line interface might be changed, until version 1.0.0 is released
+#### The current command-line interface might be slightly changed, until version 1.0.0 is released
 
 ## Simple usage, get going fast
 
@@ -145,6 +145,15 @@ optional arguments:
 ```
 
 As we did in the example for Steam: `./carafe steam create`.
+
+There are a couple of restrictions for choosing a name:
+
+- There are a few of reserved words, like 'wine', 'list' and similar words
+- All spaces are removed from the name
+- Forward slashes are replaced with dashes
+
+Aside from that you can choose any name you want,
+but descriptive names like the name of the main program are recommended.
 
 #### Install
 
@@ -320,9 +329,11 @@ and they can be started with `./carafe test start` (See the start option for mor
 
 To create a desktop shortcut, use the shortcut option.
 By default, it will place shortcuts on the user desktop.
-This can be altered by changing the output file location.
+This can be altered by changing the output folder location.
 The executable location can be conveniently set to 'link',
 so it will be automatically updated when the linked program is changed.
+It will only auto-update for the carafe shortcut type,
+but the wine shortcut will continue to work after carafe is (re)moved.
 
 ```
 usage: carafe <carafe_name> shortcut
@@ -335,15 +346,20 @@ optional arguments:
                         Location of the executable inside the carafe to
                         shortcut. Normally a path, but can be set to 'link' as
                         well.
-  -o OUTPUT_FILE, --output-file OUTPUT_FILE
-                        Location of the output file, default is the user
-                        desktop
+  -o OUTPUT_FOLDER, --output-folder OUTPUT_FOLDER
+                        Which folder to place the shortcut, default is the
+                        user desktop
+  -t {carafe,wine}, --type {carafe,wine}
+                        The type of shortcut to make
 ```
 
 Executable location will be asked interactively when not provided as an argument,
 in a fairly similar way as is done for the 'link' command.
 
 Shortcuts won't be automatically deleted when a carafe is deleted.
+
+Some programs might create a desktop shortcut during the installation,
+these type of shortcuts are made by wine and don't need carafe to work.
 
 #### Winecfg and Winetricks
 

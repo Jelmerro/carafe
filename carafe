@@ -6,7 +6,7 @@ __author__ = "Jelmer van Arnhem"
 # See README.md for more details and usage instructions
 __license__ = "MIT"
 # See LICENSE for more details and exact terms
-__version__ = "0.2.0"
+__version__ = "0.3.0-beta"
 # See https://github.com/jelmerro/carafe for repo and updates
 
 import argparse
@@ -114,67 +114,27 @@ check_for_tool("wine", WINE)
 class Carafe:
 
     def __init__(self, name):
-        self. forbidden_names = [
-            "list", "config.json", "-h", "--help",
-            "wine", "wineboot", "winecfg", "winetricks"]
-        self.name = name.replace(" ", "").replace("/", "-")
+        self.name = name
+        self.forbidden_names = [
+            "config.json", "wine", "wineboot", "winecfg", "winetricks"]
         if not self.name:
-            exit("The current name is not allowed because it appears empty")
+            print("The current name is not allowed because it appears empty")
+            sys.exit(1)
         if self.name in self.forbidden_names:
-            exit("The current name is not allowed because it is reserved")
+            print("The current name is not allowed because it is reserved")
+            sys.exit(1)
         self.prefix = os.path.join(CONFIG_FOLDER, self.name)
         self.arch = self.read_arch()
         self.link_location = self.read_link()
 
-    def exists(self):
-        if not os.path.isdir(self.prefix):
-            exit(
-                f"{self.name} is not a known carafe\n"
-                f"For a list of all carafes: '{sys.argv[0]} list'\n"
-                f"Or add a new one with '{sys.argv[0]} {self.name} create'")
-
-    def start(self, args):
-        self.exists()
-        if args.location:
-            start = self.try_to_sanitize_location(args.location)
-        elif not self.link_location:
-            exit(
-                f"{self.name} has no default/linked program path\n"
-                f"Please add one with '{sys.argv[0]} {self.name} link'")
-        else:
-            start = self.link_location
-        self.arch = self.read_arch()
-        path = os.path.join(self.prefix, "drive_c", start)
-        self.run_command(f"{WINE} \"{path}\"", os.path.dirname(path))
-
-    def read_link(self):
-        config = read_config()
-        if self.name in config:
-            if "link" in config[self.name]:
-                return config[self.name]["link"]
-        return None
-
-    def read_arch(self):
-        config = read_config()
-        if self.name in config:
-            if "arch" in config[self.name]:
-                return config[self.name]["arch"]
-        return None
-
-    def run_command(self, command, cwd=None):
-        env = os.environ
-        env["WINEPREFIX"] = self.prefix
-        if self.arch:
-            env["WINEARCH"] = self.arch
-        with open(os.path.join(self.prefix, "log"), "wb") as log:
-            subprocess.run(
-                command, shell=True, stderr=log, stdout=log, cwd=cwd, env=env)
+    # Linked functions directly called from the parser
 
     def create(self, args):
         if os.path.isdir(self.prefix):
-            exit(
+            print(
                 f"{self.name} is already a carafe\n"
                 f"Please see the list with '{sys.argv[0]} list'")
+            sys.exit(1)
         os.makedirs(self.prefix, exist_ok=True)
         self.arch = args.arch
         remove_config(self.name)
@@ -196,11 +156,27 @@ class Carafe:
                 executable = executable[::-1].replace(char, "", 1)[::-1]
         executable = executable.strip()
         if not os.path.isfile(executable):
-            exit("The specified executable could not be found")
+            print("The specified executable could not be found")
+            sys.exit(1)
         if executable.endswith(".msi"):
             self.run_command(f"{WINE} msiexec /i \"{executable}\"")
         else:
             self.run_command(f"{WINE} \"{executable}\"")
+
+    def start(self, args):
+        self.exists()
+        if args.location:
+            start = self.try_to_sanitize_location(args.location)
+        elif not self.link_location:
+            print(
+                f"{self.name} has no default/linked program path\n"
+                f"Please add one with '{sys.argv[0]} {self.name} link'")
+            sys.exit(1)
+        else:
+            start = self.link_location
+        self.arch = self.read_arch()
+        path = os.path.join(self.prefix, "drive_c", start)
+        self.run_command(f"{WINE} \"{path}\"", os.path.dirname(path))
 
     def remove(self, args):
         remove_config(self.name)
@@ -208,19 +184,6 @@ class Carafe:
         shutil.rmtree(self.prefix)
         if not os.listdir(CONFIG_FOLDER):
             shutil.rmtree(CONFIG_FOLDER)
-
-    def list_executables(self):
-        drive_c = os.path.join(self.prefix, "drive_c")
-        windows = os.path.join(drive_c, "windows")
-        exe_pattern = os.path.join(drive_c, "**", "*.exe")
-        executables = []
-        for exe in glob.glob(exe_pattern, recursive=True):
-            if not exe.startswith(windows):
-                exe = exe.replace(drive_c, "", 1)
-                if exe.startswith("/"):
-                    exe = exe.replace("/", "", 1)
-                executables.append(exe)
-        return executables
 
     def info(self, args):
         self.exists()
@@ -250,88 +213,38 @@ class Carafe:
             print(
                 f"Please add them with '{sys.argv[0]} {self.name} install'")
 
-    def try_to_sanitize_location(self, loc):
-        loc = loc.strip()
-        if loc.startswith("C:"):
-            loc = loc.replace("C:", "", 1)
-        if loc.startswith(os.path.join(self.prefix, "drive_c")):
-            loc = loc.replace(os.path.join(self.prefix, "drive_c"), "", 1)
-        if loc.startswith("/"):
-            loc = loc.replace("/", "", 1)
-        loc = loc.strip()
-        absolute = os.path.join(self.prefix, "drive_c", loc)
-        if not os.path.isfile(absolute):
-            exit("Location provided could not be found")
-        return loc
-
     def link(self, args):
         self.exists()
         if args.location:
             loc = self.try_to_sanitize_location(args.location)
         else:
-            executables = self.list_executables()
-            for index, exe in enumerate(executables):
-                print(f"{index}: C:/{exe}")
-            chosen_number = -1
-            while chosen_number < 0 or chosen_number >= len(executables):
-                chosen_number = input(
-                    "Choose the number of the new linked application: ")
-                try:
-                    chosen_number = int(chosen_number)
-                except ValueError:
-                    chosen_number = -1
-            loc = executables[chosen_number]
+            loc = self.ask_for_executable(False)
         modify_config(self.name, "link", loc)
 
     def shortcut(self, args):
-        # TODO rewrite this function to be more modular.
-        # Currently it's already the longest one here,
-        # while new features are still planned for it.
         self.exists()
-        loc = ""
-        if not args.location:
-            executables = self.list_executables()
-            for index, exe in enumerate(executables):
-                print(f"{index}: C:/{exe}")
-            if self.link_location:
-                print(f"link: C:/{self.link_location}")
-            chosen_app = -1
-            while chosen_app < 0 or chosen_app >= len(executables):
-                chosen_app = input(
-                    "Choose the number of the application "
-                    "shortcut (or choose 'link'): ").strip()
-                if chosen_app == "link":
-                    break
-                try:
-                    chosen_app = int(chosen_app)
-                except ValueError:
-                    chosen_app = -1
-            if chosen_app != "link":
-                loc = executables[chosen_app]
-        elif args.location != "link":
-            loc = self.try_to_sanitize_location(args.location)
-        if loc:
-            loc = f"\"{loc}\""
-        elif not self.link_location:
-            print(
-                f"{self.name} has no default/linked program path\n"
-                f"Please add one with '{sys.argv[0]} {self.name} link'")
+        if not os.path.isdir(args.output_folder):
+            print("The output folder does not seem to exist")
             sys.exit(1)
-        carafe_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
-        carafe_exec = os.path.join(carafe_dir, os.path.basename(sys.argv[0]))
-        if loc:
-            command = f"{carafe_exec} {self.name} start -l {loc}"
+        loc = args.location
+        if not loc:
+            loc = self.ask_for_executable(True)
+        elif loc != "link":
+            loc = self.try_to_sanitize_location(args.location)
+        if args.type:
+            shortcut_type = args.type
         else:
-            command = f"{carafe_exec} {self.name} start"
-        # TODO add support for pure wine shortcuts
-        shortcut_contents = "#!/usr/bin/env xdg-open\n" \
-            "[Desktop Entry]\n" \
-            f"Name={self.name}\n" \
-            "Type=Application\n" \
-            f"Exec={command}\n"
-        # TODO check if the location is valid
-        # AND if there is no existing file (maybe add an option for overwrite?)
-        output_file = os.path.join(args.output_file, f"{self.name}.desktop")
+            shortcut_type = ""
+            print("carafe can make two types of shortcut")
+            print("One type needs carafe, but it can auto-update the link")
+            print("The other type is a pure wine shortcut, but is static")
+            while shortcut_type not in ["carafe", "wine"]:
+                shortcut_type = input("Choose the type of shortcut to make: ")
+        if shortcut_type == "carafe":
+            shortcut_contents = self.carafe_shortcut(loc)
+        else:
+            shortcut_contents = self.wine_shortcut(loc)
+        output_file = os.path.join(args.output_folder, f"{self.name}.desktop")
         with open(output_file, "w") as f:
             f.write(shortcut_contents)
 
@@ -344,6 +257,124 @@ class Carafe:
         self.exists()
         check_for_tool("winetricks", WINETRICKS)
         self.run_command(f"{WINETRICKS} --isolate")
+
+    # Class helper functions
+
+    def exists(self):
+        if not os.path.isdir(self.prefix):
+            print(
+                f"{self.name} is not a known carafe\n"
+                f"For a list of all carafes: '{sys.argv[0]} list'\n"
+                f"Or add a new one with '{sys.argv[0]} {self.name} create'")
+            sys.exit(1)
+
+    def read_link(self):
+        config = read_config()
+        if self.name in config:
+            if "link" in config[self.name]:
+                return config[self.name]["link"]
+        return None
+
+    def read_arch(self):
+        config = read_config()
+        if self.name in config:
+            if "arch" in config[self.name]:
+                return config[self.name]["arch"]
+        return None
+
+    def run_command(self, command, cwd=None):
+        env = os.environ
+        env["WINEPREFIX"] = self.prefix
+        if self.arch:
+            env["WINEARCH"] = self.arch
+        with open(os.path.join(self.prefix, "log"), "wb") as log:
+            subprocess.run(
+                command, shell=True, stderr=log, stdout=log, cwd=cwd, env=env)
+
+    def try_to_sanitize_location(self, loc):
+        loc = loc.strip()
+        if loc.startswith("C:"):
+            loc = loc.replace("C:", "", 1)
+        if loc.startswith(os.path.join(self.prefix, "drive_c")):
+            loc = loc.replace(os.path.join(self.prefix, "drive_c"), "", 1)
+        if loc.startswith("/"):
+            loc = loc.replace("/", "", 1)
+        loc = loc.strip()
+        absolute = os.path.join(self.prefix, "drive_c", loc)
+        if not os.path.isfile(absolute):
+            print("Location provided could not be found")
+            sys.exit(1)
+        return loc
+
+    def list_executables(self):
+        drive_c = os.path.join(self.prefix, "drive_c")
+        windows = os.path.join(drive_c, "windows")
+        exe_pattern = os.path.join(drive_c, "**", "*.exe")
+        executables = []
+        for exe in glob.glob(exe_pattern, recursive=True):
+            if not exe.startswith(windows):
+                exe = exe.replace(drive_c, "", 1)
+                if exe.startswith("/"):
+                    exe = exe.replace("/", "", 1)
+                executables.append(exe)
+        return executables
+
+    def ask_for_executable(self, include_link):
+        executables = self.list_executables()
+        if not executables:
+            print(
+                "There are currently no executables found for this carafe")
+            print(
+                f"Please add them with '{sys.argv[0]} {self.name} install'")
+            sys.exit(1)
+        for index, exe in enumerate(executables):
+            print(f"{index}: C:/{exe}")
+        link_text = ""
+        if self.link_location and include_link:
+            print(f"link: C:/{self.link_location}")
+            link_text = " (or choose 'link')"
+        chosen_app = -1
+        while chosen_app < 0 or chosen_app >= len(executables):
+            chosen_app = input(
+                "Choose the number of the application "
+                f"shortcut{link_text}: ").strip()
+            if chosen_app == "link" and link_text:
+                break
+            try:
+                chosen_app = int(chosen_app)
+            except ValueError:
+                chosen_app = -1
+        if chosen_app == "link":
+            return "link"
+        return executables[chosen_app]
+
+    def carafe_shortcut(self, loc):
+        carafe_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+        carafe_exec = os.path.join(carafe_dir, os.path.basename(sys.argv[0]))
+        if loc == "link":
+            command = f"{carafe_exec} {self.name} start"
+        else:
+            command = f"{carafe_exec} {self.name} start -l \"{loc}\""
+        return "#!/usr/bin/env xdg-open\n" \
+            "[Desktop Entry]\n" \
+            f"Name={self.name}\n" \
+            "Type=Application\n" \
+            f"Exec={command}\n"
+
+    def wine_shortcut(self, loc):
+        if loc == "link":
+            loc = self.link_location
+        command = f"env WINEPREFIX=\"{self.prefix}\""
+        if self.arch:
+            command += " WINEARCH=\"{self.arch}\""
+        command += f" {WINE} \"C:/{loc}\""
+        path = os.path.dirname(os.path.join(self.prefix, "drive_c", loc))
+        return "#!/usr/bin/env xdg-open\n" \
+            "[Desktop Entry]\n" \
+            f"Name={self.name}\n" \
+            "Type=Application\n" \
+            f"Exec={command}\n" \
+            f"Path={path}\n"
 
 
 # Main startup steps
@@ -415,9 +446,12 @@ if __name__ == "__main__":
         "-l", "--location",
         help=location_help)
     sub_shortcut.add_argument(
-        "-o", "--output-file",
+        "-o", "--output-folder",
         default=os.path.join(os.path.expanduser("~"), "Desktop"),
-        help="Location of the output file, default is the user desktop")
+        help="Which folder to place the shortcut, default is the user desktop")
+    sub_shortcut.add_argument(
+        "-t", "--type", choices=["carafe", "wine"],
+        help="The type of shortcut to make")
     # Winecfg
     sub_cfg = sub.add_parser(
         "winecfg", help="run winecfg",
@@ -433,7 +467,7 @@ if __name__ == "__main__":
     if not args:
         parser.print_help()
         sys.exit(0)
-    carafe_name = args.pop(0)
+    carafe_name = args.pop(0).replace(" ", "").replace("/", "-")
     if carafe_name == "list":
         list_carafes()
     subargs = parser.parse_args(args)
