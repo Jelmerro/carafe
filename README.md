@@ -16,9 +16,7 @@ carafe is a tiny management tool for wine ~~bottles~~ carafes.
 
 ## Note
 
-#### The current command-line interface might be changed in future releases
-
-#### The interface might receive breaking changes, until version 1.0.0 is released
+#### The current command-line interface might be changed, until version 1.0.0 is released
 
 ## Simple usage, get going fast
 
@@ -29,38 +27,45 @@ both of which assume you have the setup stored inside the `~/Downloads` folder.
 
 The following commands will setup a new carafe with steam installed.
 ```
-./carafe m add steam
-./carafe m install steam -l ~/Downloads/SteamSetup.exe
-./carafe m link steam
+./carafe steam create
+./carafe steam install -e ~/Downloads/SteamSetup.exe
+./carafe steam link
 ```
-It can now be started by simply running `./carafe steam`
+It can now be started by simply running `./carafe steam start`
 
-The install step can also be called without `-l`,
-in that case it will ask for the installer location.
+The install step can also be called without `-e`,
+in that case it will ask for the installer/executable location.
 
 ### Example for portable rufus
 
 For portable programs the install step can be skipped.
 The installation steps could be something like this:
 
-`./carafe m add rufus`
+`./carafe rufus create`
 
 Now copy all the portable program files somewhere to the carafe.
 The location for our new rufus carafe is `~/.carafe/rufus/drive_c`.
 
 `cp ~/Downloads/rufus.exe ~/.carafe/rufus/drive_c/`
 
-After coping the files, we can already execute rufus using this command:
+After copying the files, we can already execute rufus using this command:
 
-`./carafe rufus "C:/rufus.exe"`
+`./carafe rufus start -l "C:/rufus.exe"`
 
 Or create a link to the exe just like we did for Steam:
 
-`./carafe m link rufus`
+`./carafe rufus link`
 
 So we can run the rufus.exe like so:
 
-`./carafe rufus`
+`./carafe rufus start`
+
+### Other notes
+
+- To get more clarity about the carafes use the info and list commands
+- All info about the Steam carafe: `./carafe steam info`
+- A list of all the carafes: `./carafe list`
+- Remove the rufus carafe completely with: `./carafe rufus remove`
 
 ## Advanced usage
 
@@ -85,22 +90,14 @@ There is one trade-off to all these advantages:
 
 ### Manage carafe
 
-All carafe configuration commands start with one of the following arguments:
-
-`./carafe manage <options>` or `./carafe m <options>`
-
-Because of the way the program linking works in carafe, these names are not allowed for any carafe.
-See "Start a program" for details on this.
-
-After running `./carafe m` a list of the supported options will shown.
-For a quick explanation on all of them, the help output is shown below:
+After running `./carafe` a list of the supported options will shown.
+All of them are listed in the output as shown here:
 
 ```
-usage: carafe m [-h]
-                {add,install,remove,list,info,link,shortcut,winecfg,winetricks}
-                ...
+usage: carafe {<carafe_name>,list} <sub_command>
 
-Welcome to carafe 0.1.0
+Welcome to carafe 0.2.0
+carafe is a tiny management tool for wine bottles/carafes.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -108,16 +105,16 @@ optional arguments:
 sub-commands:
   All the valid sub-commands to manage the carafes
 
-  {add,install,remove,list,info,link,shortcut,winecfg,winetricks}
-    add                 add --help
-    install             install --help
-    remove              remove --help
-    list                list --help
-    info                info --help
-    link                link --help
-    shortcut            shortcut --help
-    winecfg             winecfg --help
-    winetricks          winetricks --help
+  {create,install,start,remove,info,link,shortcut,winecfg,winetricks}
+    create              create a new carafe
+    install             install software to the carafe
+    start               start an installed program
+    remove              remove a carafe
+    info                all info about a carafe
+    link                link a program to the carafe
+    shortcut            generate a desktop shortcut
+    winecfg             run winecfg
+    winetricks          run winetricks
 
 carafe was made by Jelmer van Arnhem and is MIT licensed
 For documentation and other information, see the README.md
@@ -129,32 +126,25 @@ If no user interaction is possible or wanted after running the command,
 next time call the command with all arguments which were asked as a question.
 In the section below, further details are provided on most options.
 
-### Options details
-
-Almost all arguments for the management options are optional,
-but they do explain a lot about their usage and can reduce user interaction.
-Most options are explained in detail below.
-
-#### Add
+#### Create
 
 The first step to using carafe is creating a new carafe to install apps into.
 This command only accepts --arch as an optional argument.
 By default the system architecture will be used.
-You cannot change the arch after creating a carafe,
+You cannot change the arch after creating a carafe (wine limitation),
 but you can create a new carafe with a different arch.
 
 ```
-usage: carafe m add [-h] [--arch ARCH] name
+usage: carafe <carafe_name> create
 
-Use 'add' to create a new carafe, this is usually step 1
-
-positional arguments:
-  name         The name of the new carafe
+Use 'create' to make a new carafe, you should start here
 
 optional arguments:
   -h, --help   show this help message and exit
-  --arch ARCH  Change the default arch, e.g. win32
+  --arch ARCH  Change the default arch, e.g. to win32
 ```
+
+As we did in the example for Steam: `./carafe steam create`.
 
 #### Install
 
@@ -164,17 +154,44 @@ If the executable argument is not provided,
 carafe will ask the user to enter the location.
 
 ```
-usage: carafe m install [-h] [-e EXECUTABLE] name
+usage: carafe <carafe_name> install
 
 Use 'install' to run an external exe/msi inside the carafe
-
-positional arguments:
-  name                  The name of an existing carafe
 
 optional arguments:
   -h, --help            show this help message and exit
   -e EXECUTABLE, --executable EXECUTABLE
-                        Location of the executable to run inside the carafe
+                        Location of the external executable to run inside the
+                        carafe
+```
+
+#### Start
+
+This option is used to start programs inside a carafe.
+For existing carafes, starting the default/linked program should be as straightforward as:
+
+`./carafe <name_of_carafe> start`
+
+For example, the default program of an existing carafe for Steam could be started as:
+
+`./carafe steam start`
+
+To run a different program inside the Steam carafe, add the location argument:
+
+`./carafe steam start -l "Program Files (x86)/Internet Explorer/iexplore.exe"`
+
+For the above command, an absolute path from the root of the carafe's C: disk is assumed.
+The location argument is required for carafes with no program linked yet.
+
+```
+usage: carafe <carafe_name> start
+
+Use 'start' to start a program inside an existing carafe
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -l LOCATION, --location LOCATION
+                        Location of the executable inside the carafe to start
 ```
 
 #### Remove
@@ -182,12 +199,9 @@ optional arguments:
 Once you are done with a carafe, this option can completely remove it from disk.
 
 ```
-usage: carafe m remove [-h] name
+usage: carafe <carafe_name> remove
 
 Use 'remove' to delete an existing carafe
-
-positional arguments:
-  name        The name of the existing carafe
 
 optional arguments:
   -h, --help  show this help message and exit
@@ -197,19 +211,22 @@ If the removal of a carafe results in an empty config file,
 the config file will be deleted from disk.
 If either the removal of the config or the carafe result in an empty `~/.carafe` folder,
 it will be deleted as well, as if carafe had never been used before.
-Desktop shortcuts will not be automatically deleted (see 'shortcut' option).
+Desktop shortcuts will not be automatically deleted (see 'shortcut' option for creating them).
 
 #### List
 
 To view a list of all the existing carafes, use the list option.
 
+This option will ignore all arguments after it,
+and will show a list like this:
+
+`./carafe list`
+
 ```
-usage: carafe m list [-h]
-
-Use 'list' to show all existing carafes
-
-optional arguments:
-  -h, --help  show this help message and exit
+The following carafes are currently configured:
+steam
+rufus
+Run './carafe <carafe_name> info' for more information
 ```
 
 #### Info
@@ -217,33 +234,32 @@ optional arguments:
 All known information about an existing carafe can be listed with the info option.
 
 ```
-usage: carafe m info [-h] name
+usage: carafe <carafe_name> info
 
 Use 'info' to print all information about a carafe
-
-positional arguments:
-  name        The name of the existing carafe
 
 optional arguments:
   -h, --help  show this help message and exit
 ```
 
-For example, after creating a new carafe named 'test', the following info will be shown:
+For example, after creating a new carafe named 'test',
+the command `./carafe test info` will return the following:
 
 ```
 All information about carafe 'test':
 Configured with default system arch
 No link is currently configured
-When a carafe is linked, you can start the program with './carafe test'
-To modify the link, use './carafe m link test'
+When a carafe is linked, you can start the program with './carafe test start'
+To modify the link, use './carafe test link'
 
 The current list of executables looks like this:
-Program Files (x86)/Internet Explorer/iexplore.exe
-Program Files (x86)/Windows NT/Accessories/wordpad.exe
-Program Files (x86)/Windows Media Player/wmplayer.exe
-Program Files/Internet Explorer/iexplore.exe
-Program Files/Windows NT/Accessories/wordpad.exe
-Program Files/Windows Media Player/wmplayer.exe
+C:/Program Files (x86)/Internet Explorer/iexplore.exe
+C:/Program Files (x86)/Windows NT/Accessories/wordpad.exe
+C:/Program Files (x86)/Windows Media Player/wmplayer.exe
+C:/Program Files/Internet Explorer/iexplore.exe
+C:/Program Files/Windows NT/Accessories/wordpad.exe
+C:/Program Files/Windows Media Player/wmplayer.exe
+You can add more with './carafe test install'
 ```
 
 #### Link
@@ -251,42 +267,54 @@ Program Files/Windows Media Player/wmplayer.exe
 An important feature of carafe is the linking system.
 It allows the user to pick a default location to execute per carafe.
 
-In the previous info output, a message was displayed regarding the linking.
-When running the `./carafe m link test` command now, it will ask us to choose an executable like this:
+```
+sage: carafe <carafe_name> link
+
+Use 'link' to connect the startup link (recommended)
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -l LOCATION, --location LOCATION
+                        Location of the executable inside the carafe to link
+```
+
+After running the 'info' option, a message was displayed regarding the linking.
+When running the `./carafe test link` command now, it will ask us to choose an executable like this:
 
 ```
-0: Program Files (x86)/Internet Explorer/iexplore.exe
-1: Program Files (x86)/Windows NT/Accessories/wordpad.exe
-2: Program Files (x86)/Windows Media Player/wmplayer.exe
-3: Program Files/Internet Explorer/iexplore.exe
-4: Program Files/Windows NT/Accessories/wordpad.exe
-5: Program Files/Windows Media Player/wmplayer.exe
+0: C:/Program Files (x86)/Internet Explorer/iexplore.exe
+1: C:/Program Files (x86)/Windows NT/Accessories/wordpad.exe
+2: C:/Program Files (x86)/Windows Media Player/wmplayer.exe
+3: C:/Program Files/Internet Explorer/iexplore.exe
+4: C:/Program Files/Windows NT/Accessories/wordpad.exe
+5: C:/Program Files/Windows Media Player/wmplayer.exe
 Choose the number of the new linked application: 3
 ```
 
 After choosing number 3 as the linked application,
-the command `./carafe m info test` now displays the following:
+the command `./carafe test info` now displays the following:
 
 ```
 All information about carafe 'test':
 Configured with default system arch
 A link for easy startup is configured to the following:
 Program Files/Internet Explorer/iexplore.exe
-When a carafe is linked, you can start the program with './carafe test'
-To modify the link, use './carafe m link test'
+When a carafe is linked, you can start the program with './carafe test start'
+To modify the link, use './carafe test link'
 
 The current list of executables looks like this:
-Program Files (x86)/Internet Explorer/iexplore.exe
-Program Files (x86)/Windows NT/Accessories/wordpad.exe
-Program Files (x86)/Windows Media Player/wmplayer.exe
-Program Files/Internet Explorer/iexplore.exe
-Program Files/Windows NT/Accessories/wordpad.exe
-Program Files/Windows Media Player/wmplayer.exe
+C:/Program Files (x86)/Internet Explorer/iexplore.exe
+C:/Program Files (x86)/Windows NT/Accessories/wordpad.exe
+C:/Program Files (x86)/Windows Media Player/wmplayer.exe
+C:/Program Files/Internet Explorer/iexplore.exe
+C:/Program Files/Windows NT/Accessories/wordpad.exe
+C:/Program Files/Windows Media Player/wmplayer.exe
+You can add more with './carafe test install'
 ```
 
 The list of executables is automatically filled with all exe files inside the carafe.
 New programs can be installed with the install option,
-and they can be started with `./carafe test` (See "Start a program" for more details).
+and they can be started with `./carafe test start` (See the start option for more details).
 
 #### Shortcut
 
@@ -297,16 +325,13 @@ The executable location can be conveniently set to 'link',
 so it will be automatically updated when the linked program is changed.
 
 ```
-usage: carafe m shortcut [-h] [-e EXECUTABLE] [-o OUTPUT_FILE] name
+usage: carafe <carafe_name> shortcut
 
 Use 'shortcut' to create a .desktop shortcut to a carafe
 
-positional arguments:
-  name                  The name of an existing carafe
-
 optional arguments:
   -h, --help            show this help message and exit
-  -e EXECUTABLE, --executable EXECUTABLE
+  -l LOCATION, --location LOCATION
                         Location of the executable inside the carafe to
                         shortcut. Normally a path, but can be set to 'link' as
                         well.
@@ -314,6 +339,7 @@ optional arguments:
                         Location of the output file, default is the user
                         desktop
 ```
+
 Executable location will be asked interactively when not provided as an argument,
 in a fairly similar way as is done for the 'link' command.
 
@@ -321,28 +347,15 @@ Shortcuts won't be automatically deleted when a carafe is deleted.
 
 #### Winecfg and Winetricks
 
-Both of these commands only accept the carafe name as the first and only argument.
+Both of these commands accept no arguments besides `--help`.
+
+Example usage of winecfg for a Steam carafe looks like this:
+
+`./carafe steam winecfg`
+
 They will directly execute the winecfg or winetricks command respectively.
 In the last paragraph, it's explained how these commands are handled,
 and how you can run them directly without using the carafe interface.
-
-### Start a program
-
-For existing carafes, starting the default/linked program should be as straightforward as:
-
-`./carafe <name_of_carafe>`
-
-For example, the default program of an existing carafe for Steam could be started as:
-
-`./carafe steam`
-
-To run a different program inside the Steam carafe, append the command with the location:
-
-`./carafe steam "Program Files (x86)/Internet Explorer/iexplore.exe"`
-
-For the above command, an absolute path from the root of the carafe's C: disk is assumed.
-
-### Further customization
 
 The carafes are created by running prefixed wine commands.
 All features available using wine, winecfg, winetricks or any other tool can be used with carafe.
@@ -351,13 +364,10 @@ For example, to open the winecfg for a Steam carafe, the following command could
 
 `WINEPREFIX=~/.carafe/steam winecfg`
 
-This is exactly what carafe will do when asked to configure wine like so:
-
-`./carafe manage winecfg steam` or `./carafe m winecfg steam`
+This is exactly what carafe will do when asked to invoke winecfg,
+but carafe makes sure the arch and wineprefix are automatically correct.
 
 The same shortcut is added for winetricks, other tools can use the original wineprefix command.
-
-The advantage of using the carafe shortcut is that the arch and prefix are added automatically.
 
 In short, carafe is aimed to ease the configuration of wine bottles/carafes,
 without introducing any magic or changing the wine prefix system.
