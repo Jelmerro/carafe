@@ -6,7 +6,7 @@ __author__ = "Jelmer van Arnhem"
 # See README.md for more details and usage instructions
 __license__ = "MIT"
 # See LICENSE for more details and exact terms
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 # See https://github.com/jelmerro/carafe for repo and updates
 
 import argparse
@@ -76,21 +76,11 @@ def list_carafes():
         print("The following carafes are currently configured:")
         for carafe in carafes:
             print(carafe)
-        print(f"Run '{sys.argv[0]} m info <carafe_name>' for more information")
+        print(f"Run '{sys.argv[0]} <carafe_name> info' for more information")
     else:
         print("There are currently no carafes configured")
-        print(f"Use '{sys.argv[0]} m add <carafe_name>' to add a new carafe")
+        print(f"Use '{sys.argv[0]} <carafe_name> create' to add a new carafe")
     sys.exit(0)
-
-
-def exit(message, code=1):
-    error = f"\nThe current command failed for the following " \
-        f"reason:\n    {message}\n"
-    if message:
-        print(GENERAL.format(error))
-    else:
-        print(GENERAL.format(""))
-    sys.exit(code)
 
 
 def check_for_tool(name, location):
@@ -125,11 +115,9 @@ class Carafe:
 
     def __init__(self, name):
         self. forbidden_names = [
-            "m", "manage", "config.json", "wine",
-            "wineboot", "winecfg", "winetricks"]
-        self.name = name.replace(" ", "").replace("/", "-").replace("\\", "-")
-        while self.name.startswith("-"):
-            self.name = self.name.replace("-", "", 1)
+            "list", "config.json", "-h", "--help",
+            "wine", "wineboot", "winecfg", "winetricks"]
+        self.name = name.replace(" ", "").replace("/", "-")
         if not self.name:
             exit("The current name is not allowed because it appears empty")
         if self.name in self.forbidden_names:
@@ -141,18 +129,18 @@ class Carafe:
     def exists(self):
         if not os.path.isdir(self.prefix):
             exit(
-                f"{self.name} is not a known carafe\n    "
-                f"For a list of all carafes: '{sys.argv[0]} m list'\n    "
-                f"Or add a new one with '{sys.argv[0]} m add {self.name}'")
+                f"{self.name} is not a known carafe\n"
+                f"For a list of all carafes: '{sys.argv[0]} list'\n"
+                f"Or add a new one with '{sys.argv[0]} {self.name} create'")
 
-    def start(self, custom_path_list):
+    def start(self, args):
         self.exists()
-        if custom_path_list:
-            start = self.try_to_sanitize_location(custom_path_list[0])
+        if args.location:
+            start = self.try_to_sanitize_location(args.location)
         elif not self.link_location:
             exit(
-                f"{self.name} has no default/linked program path\n    "
-                f"Please add one with '{sys.argv[0]} m link {self.name}'")
+                f"{self.name} has no default/linked program path\n"
+                f"Please add one with '{sys.argv[0]} {self.name} link'")
         else:
             start = self.link_location
         self.arch = self.read_arch()
@@ -182,11 +170,11 @@ class Carafe:
             subprocess.run(
                 command, shell=True, stderr=log, stdout=log, cwd=cwd, env=env)
 
-    def add(self, args):
+    def create(self, args):
         if os.path.isdir(self.prefix):
             exit(
-                f"{self.name} is already a carafe\n    "
-                f"Please see the list with '{sys.argv[0]} m list'")
+                f"{self.name} is already a carafe\n"
+                f"Please see the list with '{sys.argv[0]} list'")
         os.makedirs(self.prefix, exist_ok=True)
         self.arch = args.arch
         remove_config(self.name)
@@ -208,7 +196,7 @@ class Carafe:
                 executable = executable[::-1].replace(char, "", 1)[::-1]
         executable = executable.strip()
         if not os.path.isfile(executable):
-            exit(f"The specified executable could not be found")
+            exit("The specified executable could not be found")
         if executable.endswith(".msi"):
             self.run_command(f"{WINE} msiexec /i \"{executable}\"")
         else:
@@ -249,16 +237,18 @@ class Carafe:
             print("No link is currently configured")
         print(
             "When a carafe is linked, you can start the program with "
-            f"'{sys.argv[0]} {self.name}'")
-        print(f"To modify the link, use '{sys.argv[0]} m link {self.name}'")
+            f"'{sys.argv[0]} {self.name} start'")
+        print(f"To modify the link, use '{sys.argv[0]} {self.name} link'")
         if executables:
             print("\nThe current list of executables looks like this:")
             for exe in executables:
                 print(f"C:/{exe}")
+            print(
+                f"You can add more with '{sys.argv[0]} {self.name} install'")
         else:
             print("\nThere are currently no executables found for this carafe")
             print(
-                f"Please add them with '{sys.argv[0]} m install {self.name}'")
+                f"Please add them with '{sys.argv[0]} {self.name} install'")
 
     def try_to_sanitize_location(self, loc):
         loc = loc.strip()
@@ -271,10 +261,7 @@ class Carafe:
         loc = loc.strip()
         absolute = os.path.join(self.prefix, "drive_c", loc)
         if not os.path.isfile(absolute):
-            exit(
-                f"Location provided could not be found\n    "
-                "Please run the command with no arguments for a list"
-                " of all shortcuts")
+            exit("Location provided could not be found")
         return loc
 
     def link(self, args):
@@ -297,9 +284,12 @@ class Carafe:
         modify_config(self.name, "link", loc)
 
     def shortcut(self, args):
+        # TODO rewrite this function to be more modular.
+        # Currently it's already the longest one here,
+        # while new features are still planned for it.
         self.exists()
         loc = ""
-        if not args.executable:
+        if not args.location:
             executables = self.list_executables()
             for index, exe in enumerate(executables):
                 print(f"{index}: C:/{exe}")
@@ -318,23 +308,29 @@ class Carafe:
                     chosen_app = -1
             if chosen_app != "link":
                 loc = executables[chosen_app]
-        elif args.executable != "link":
-            loc = self.try_to_sanitize_location(args.executable)
+        elif args.location != "link":
+            loc = self.try_to_sanitize_location(args.location)
         if loc:
             loc = f"\"{loc}\""
         elif not self.link_location:
             print(
                 f"{self.name} has no default/linked program path\n"
-                f"Please add one with '{sys.argv[0]} m link {self.name}'")
+                f"Please add one with '{sys.argv[0]} {self.name} link'")
             sys.exit(1)
         carafe_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
         carafe_exec = os.path.join(carafe_dir, os.path.basename(sys.argv[0]))
-        command = f"{carafe_exec} {self.name} {loc}".strip()
+        if loc:
+            command = f"{carafe_exec} {self.name} start -l {loc}"
+        else:
+            command = f"{carafe_exec} {self.name} start"
+        # TODO add support for pure wine shortcuts
         shortcut_contents = "#!/usr/bin/env xdg-open\n" \
             "[Desktop Entry]\n" \
             f"Name={self.name}\n" \
             "Type=Application\n" \
             f"Exec={command}\n"
+        # TODO check if the location is valid
+        # AND if there is no existing file (maybe add an option for overwrite?)
         output_file = os.path.join(args.output_file, f"{self.name}.desktop")
         with open(output_file, "w") as f:
             f.write(shortcut_contents)
@@ -350,80 +346,73 @@ class Carafe:
         self.run_command(f"{WINETRICKS} --isolate")
 
 
-# General help text for non-management commands
-GENERAL = f"""Welcome to carafe {__version__}
-A tiny management tool for wine carafes.
-{{}}
-carafe has two modes, one for management and one for easy startup.
-    To start an existing carafe, run '{sys.argv[0]} <carafe_name>'.
-    For help with management commands, run '{sys.argv[0]} m'.
-
-More details and general information can be found in the README.md file.
-carafe was made by {__author__} and is MIT licensed (LICENSE for details)."""
-
-
 # Main startup steps
 if __name__ == "__main__":
-    # Remove program name from local args
-    args = sys.argv[:]
-    args.pop(0)
-    # Prepare parser for manage subcommand
+    # Prepare the main parser
+    description = f"Welcome to carafe {__version__}\n" \
+        "carafe is a tiny management tool for wine bottles/carafes.\n"
+    usage = "carafe {<carafe_name>,list} <sub_command>"
     parser = argparse.ArgumentParser(
+        usage=usage,
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        prog="carafe m",
-        description=f"Welcome to carafe {__version__}",
+        description=description,
         epilog=f"carafe was made by {__author__} and is MIT licensed"
                "\nFor documentation and other information, see the README.md")
     # Sub commands parser
     sub = parser.add_subparsers(
         title="sub-commands", dest="sub",
         description="All the valid sub-commands to manage the carafes")
-    # Add
-    sub_add = sub.add_parser(
-        "add", help="add --help",
-        description="Use 'add' to create a new carafe, this is usually step 1")
-    sub_add.add_argument("name", help="The name of the new carafe")
-    sub_add.add_argument("--arch", help="Change the default arch, e.g. win32")
+    # Create
+    sub_create = sub.add_parser(
+        "create", help="create a new carafe",
+        usage="carafe <carafe_name> create",
+        description="Use 'create' to make a new carafe, you should start here")
+    sub_create.add_argument(
+        "--arch", help="Change the default arch, e.g. to win32")
     # Install
     sub_install = sub.add_parser(
-        "install", help="install --help",
+        "install", help="install software to the carafe",
+        usage="carafe <carafe_name> install",
         description="Use 'install' to run an ext"
                     "ernal exe/msi inside the carafe")
-    sub_install.add_argument("name", help="The name of an existing carafe")
     sub_install.add_argument(
         "-e", "--executable",
-        help="Location of the executable to run inside the carafe")
+        help="Location of the external executable to run inside the carafe")
+    # Start
+    sub_start = sub.add_parser(
+        "start", help="start an installed program",
+        usage="carafe <carafe_name> start",
+        description="Use 'start' to start a program inside an existing carafe")
+    sub_start.add_argument(
+        "-l", "--location",
+        help="Location of the executable inside the carafe to start")
     # Remove
     sub_remove = sub.add_parser(
-        "remove", help="remove --help",
+        "remove", help="remove a carafe",
+        usage="carafe <carafe_name> remove",
         description="Use 'remove' to delete an existing carafe")
-    sub_remove.add_argument("name", help="The name of the existing carafe")
-    # List
-    sub_list = sub.add_parser(
-        "list", help="list --help",
-        description="Use 'list' to show all existing carafes")
     # Info
     sub_info = sub.add_parser(
-        "info", help="info --help",
+        "info", help="all info about a carafe",
+        usage="carafe <carafe_name> info",
         description="Use 'info' to print all information about a carafe")
-    sub_info.add_argument("name", help="The name of the existing carafe")
     # Link
     sub_link = sub.add_parser(
-        "link", help="link --help",
+        "link", help="link a program to the carafe",
+        usage="carafe <carafe_name> link",
         description="Use 'link' to connect the startup link (recommended)")
-    sub_link.add_argument("name", help="The name of an existing carafe")
     sub_link.add_argument(
         "-l", "--location",
         help="Location of the executable inside the carafe to link")
     # Shortcut
     sub_shortcut = sub.add_parser(
-        "shortcut", help="shortcut --help",
+        "shortcut", help="generate a desktop shortcut",
+        usage="carafe <carafe_name> shortcut",
         description="Use 'shortcut' to create a .desktop shortcut to a carafe")
-    sub_shortcut.add_argument("name", help="The name of an existing carafe")
     location_help = "Location of the executable inside the carafe to " \
         "shortcut. Normally a path, but can be set to 'link' as well."
     sub_shortcut.add_argument(
-        "-e", "--executable",
+        "-l", "--location",
         help=location_help)
     sub_shortcut.add_argument(
         "-o", "--output-file",
@@ -431,30 +420,26 @@ if __name__ == "__main__":
         help="Location of the output file, default is the user desktop")
     # Winecfg
     sub_cfg = sub.add_parser(
-        "winecfg", help="winecfg --help",
+        "winecfg", help="run winecfg",
+        usage="carafe <carafe_name> winecfg",
         description="Use 'winecfg' to configure all wine settings")
-    sub_cfg.add_argument("name", help="The name of an existing carafe")
     # Winetricks
     sub_tricks = sub.add_parser(
-        "winetricks", help="winetricks --help",
+        "winetricks", help="run winetricks",
+        usage="carafe <carafe_name> winetricks",
         description="Use 'winetricks' to install winetricks components")
-    sub_tricks.add_argument("name", help="The name of an existing carafe")
-    # Check if arguments are actually given
-    if args:
-        mode_or_name = args.pop(0)
-        # Activate management parser
-        if mode_or_name in ["m", "manage"]:
-            if args:
-                subargs = parser.parse_args(args)
-                # Call the correct subcommand on the Carafe class
-                if subargs.sub == "list":
-                    list_carafes()
-                carafe = globals()["Carafe"](subargs.name)
-                getattr(carafe, subargs.sub)(subargs)
-            else:
-                parser.print_help()
-            sys.exit(0)
-        # Start a program for the carafe by name (the linked one, if no args)
-        Carafe(mode_or_name).start(args)
+    # Actually handle all the arguments
+    args = sys.argv[1:]
+    if not args:
+        parser.print_help()
         sys.exit(0)
-    exit("", 0)
+    carafe_name = args.pop(0)
+    if carafe_name == "list":
+        list_carafes()
+    subargs = parser.parse_args(args)
+    if not subargs.sub or carafe_name in ["-h", "--help"]:
+        parser.print_help()
+        sys.exit(0)
+    # Call the correct subcommand on the Carafe class
+    carafe = globals()["Carafe"](carafe_name)
+    getattr(carafe, subargs.sub)(subargs)
