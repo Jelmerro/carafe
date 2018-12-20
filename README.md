@@ -23,18 +23,29 @@ carafe is a tiny management tool for wine ~~bottles~~ carafes.
 There are two example provided here,
 both of which assume you have the setup stored inside the `~/Downloads` folder.
 
+You might need to make carafe executable with `chmod +x carafe`.
+
 ### Example for Steam installer
 
 The following commands will setup a new carafe with steam installed.
 ```
 ./carafe steam create
-./carafe steam install -e ~/Downloads/SteamSetup.exe
+./carafe steam install
 ./carafe steam link
 ```
 It can now be started by simply running `./carafe steam start`
 
-The install step can also be called without `-e`,
-in that case it will ask for the installer/executable location.
+If you don't like the interactive questions, the same can be achieved like this:
+
+```
+./carafe steam create
+./carafe steam install -e ~/Downloads/SteamSetup.exe
+./carafe steam link -l "Program Files (x86)/Steam/Steam.exe"
+./carafe steam start
+```
+
+It's also possible to skip the link step and start like this: `./carafe steam start -l "Program Files (x86)/Steam/Steam.exe"`.
+The link option is recommended to make the start command easier to use (and shorter).
 
 ### Example for portable rufus
 
@@ -96,7 +107,7 @@ All of them are listed in the output as shown here:
 ```
 usage: carafe {<carafe_name>,list} <sub_command>
 
-Welcome to carafe 0.2.0
+Welcome to carafe 0.3.0-beta
 carafe is a tiny management tool for wine bottles/carafes.
 
 optional arguments:
@@ -251,24 +262,28 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-For example, after creating a new carafe named 'test',
-the command `./carafe test info` will return the following:
+For example, to get all info about our steam carafe,
+the command `./carafe steam info` will return the following:
 
 ```
-All information about carafe 'test':
+All information about carafe 'steam':
 Configured with default system arch
 No link is currently configured
-When a carafe is linked, you can start the program with './carafe test start'
-To modify the link, use './carafe test link'
+When a carafe is linked, you can start the program with './carafe steam start'
+To modify the link, use './carafe steam link'
 
 The current list of executables looks like this:
 C:/Program Files (x86)/Internet Explorer/iexplore.exe
+C:/Program Files (x86)/Common Files/Steam/SteamService.exe
 C:/Program Files (x86)/Windows NT/Accessories/wordpad.exe
+C:/Program Files (x86)/Steam/uninstall.exe
+C:/Program Files (x86)/Steam/Steam.exe
+C:/Program Files (x86)/Steam/bin/SteamService.exe
 C:/Program Files (x86)/Windows Media Player/wmplayer.exe
 C:/Program Files/Internet Explorer/iexplore.exe
 C:/Program Files/Windows NT/Accessories/wordpad.exe
 C:/Program Files/Windows Media Player/wmplayer.exe
-You can add more with './carafe test install'
+You can add more with './carafe steam install'
 ```
 
 #### Link
@@ -277,7 +292,7 @@ An important feature of carafe is the linking system.
 It allows the user to pick a default location to execute per carafe.
 
 ```
-sage: carafe <carafe_name> link
+usage: carafe <carafe_name> link
 
 Use 'link' to connect the startup link (recommended)
 
@@ -288,42 +303,51 @@ optional arguments:
 ```
 
 After running the 'info' option, a message was displayed regarding the linking.
-When running the `./carafe test link` command now, it will ask us to choose an executable like this:
+When running the `./carafe steam link` command now, it will ask us to choose an executable like this:
 
 ```
 0: C:/Program Files (x86)/Internet Explorer/iexplore.exe
-1: C:/Program Files (x86)/Windows NT/Accessories/wordpad.exe
-2: C:/Program Files (x86)/Windows Media Player/wmplayer.exe
-3: C:/Program Files/Internet Explorer/iexplore.exe
-4: C:/Program Files/Windows NT/Accessories/wordpad.exe
-5: C:/Program Files/Windows Media Player/wmplayer.exe
-Choose the number of the new linked application: 3
+1: C:/Program Files (x86)/Common Files/Steam/SteamService.exe
+2: C:/Program Files (x86)/Windows NT/Accessories/wordpad.exe
+3: C:/Program Files (x86)/Steam/uninstall.exe
+4: C:/Program Files (x86)/Steam/Steam.exe
+5: C:/Program Files (x86)/Steam/bin/SteamService.exe
+6: C:/Program Files (x86)/Windows Media Player/wmplayer.exe
+7: C:/Program Files/Internet Explorer/iexplore.exe
+8: C:/Program Files/Windows NT/Accessories/wordpad.exe
+9: C:/Program Files/Windows Media Player/wmplayer.exe
+Choose the number of the application shortcut: 4
 ```
 
-After choosing number 3 as the linked application,
-the command `./carafe test info` now displays the following:
+After choosing number 4 as the linked application,
+the command `./carafe steam info` now displays the following:
 
 ```
-All information about carafe 'test':
+All information about carafe 'steam':
 Configured with default system arch
 A link for easy startup is configured to the following:
-Program Files/Internet Explorer/iexplore.exe
-When a carafe is linked, you can start the program with './carafe test start'
-To modify the link, use './carafe test link'
+Program Files (x86)/Steam/Steam.exe
+When a carafe is linked, you can start the program with './carafe steam start'
+To modify the link, use './carafe steam link'
 
 The current list of executables looks like this:
 C:/Program Files (x86)/Internet Explorer/iexplore.exe
+C:/Program Files (x86)/Common Files/Steam/SteamService.exe
 C:/Program Files (x86)/Windows NT/Accessories/wordpad.exe
+C:/Program Files (x86)/Steam/uninstall.exe
+C:/Program Files (x86)/Steam/Steam.exe
+C:/Program Files (x86)/Steam/bin/SteamService.exe
 C:/Program Files (x86)/Windows Media Player/wmplayer.exe
 C:/Program Files/Internet Explorer/iexplore.exe
 C:/Program Files/Windows NT/Accessories/wordpad.exe
 C:/Program Files/Windows Media Player/wmplayer.exe
-You can add more with './carafe test install'
+You can add more with './carafe steam install'
 ```
 
+We can now start steam with `./carafe steam start`,
+or start a different program inside the carafe: `./carafe steam start -l "Program Files/Internet Explorer/iexplore.exe"`.
+
 The list of executables is automatically filled with all exe files inside the carafe.
-New programs can be installed with the install option,
-and they can be started with `./carafe test start` (See the start option for more details).
 
 #### Shortcut
 
