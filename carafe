@@ -6,7 +6,7 @@ __author__ = "Jelmer van Arnhem"
 # See README.md for more details and usage instructions
 __license__ = "MIT"
 # See LICENSE for more details and exact terms
-__version__ = "0.3.0"
+__version__ = "0.4.0-beta"
 # See https://github.com/jelmerro/carafe for repo and updates
 
 import argparse
@@ -173,6 +173,32 @@ class Carafe:
         self.arch = self.read_arch()
         path = os.path.join(self.prefix, "drive_c", start)
         self.run_command(f"{WINE} \"{path}\"", os.path.dirname(path))
+
+    def copy(self, args):
+        self.exists()
+        newname = args.newname.replace(" ", "").replace("/", "-")
+        if not newname:
+            print("The new name is not allowed because it appears empty")
+            sys.exit(1)
+        additional_reserved = ["-h", "--help", "list"]
+        if newname in self.forbidden_names or newname in additional_reserved:
+            print("The new name is not allowed because it is reserved")
+            sys.exit(1)
+        newpath = os.path.join(CONFIG_FOLDER, newname)
+        if os.path.isdir(newpath):
+            print(
+                f"{newname} is already a carafe\n"
+                f"Please see the list with '{sys.argv[0]} list'")
+            sys.exit(1)
+        shutil.copytree(self.prefix, newpath, symlinks=True)
+        if self.arch:
+            modify_config(newname, "arch", self.arch)
+        if self.link_location:
+            modify_config(newname, "link", self.link_location)
+        try:
+            os.remove(os.path.join(newpath, "log"))
+        except OSError:
+            pass
 
     def remove(self, args):
         remove_config(self.name)
@@ -419,6 +445,12 @@ if __name__ == "__main__":
     sub_start.add_argument(
         "-l", "--location",
         help="Location of the executable inside the carafe to start")
+    # Copy
+    sub_copy = sub.add_parser(
+        "copy", help="copy an existing carafe",
+        usage="carafe <carafe_name> copy <new_name>",
+        description="Use 'copy' to duplicate an existing carafe to a new one")
+    sub_copy.add_argument("newname", help="Name of the new carafe")
     # Remove
     sub.add_parser(
         "remove", help="remove a carafe",
