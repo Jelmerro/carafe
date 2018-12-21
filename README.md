@@ -113,7 +113,7 @@ All of them are listed in the output as shown here:
 ```
 usage: carafe {<carafe_name>,list} <sub_command>
 
-Welcome to carafe 0.4.0-beta
+Welcome to carafe 0.4.0
 carafe is a tiny management tool for wine bottles/carafes.
 
 optional arguments:
@@ -122,10 +122,11 @@ optional arguments:
 sub-commands:
   All the valid sub-commands to manage the carafes
 
-  {create,install,start,copy,remove,info,link,shortcut,regedit,winecfg,winetricks}
+  {create,install,start,rename,copy,remove,info,link,shortcut,regedit,winecfg,winetricks}
     create              create a new carafe
     install             install software to the carafe
     start               start an installed program
+    rename              rename an existing carafe
     copy                copy an existing carafe
     remove              remove a carafe
     info                all info about a carafe
@@ -221,6 +222,27 @@ optional arguments:
   -l LOCATION, --location LOCATION
                         Location of the executable inside the carafe to start
 ```
+
+#### Rename
+
+With the rename option you change the name of an existing carafe.
+
+```
+usage: carafe <carafe_name> rename <new_name>
+
+Use 'rename' to to change the name of an existing carafe
+
+positional arguments:
+  newname     New name of the carafe
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+For example: `./carafe steam rename steam-backup`.
+
+Rename will actually copy the existing carafe and remove the old one.
+Running these two options separately will do exactly the same.
 
 #### Copy
 
