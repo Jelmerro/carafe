@@ -71,12 +71,15 @@ So we can run the rufus.exe like so:
 
 `./carafe rufus start`
 
-### Other notes
+### Other options
 
-- To get more clarity about the carafes use the info and list commands
+There are many more sub-commands provided by carafe,
+the most important ones are listed here:
+
 - All info about the Steam carafe: `./carafe steam info`
 - A list of all the carafes: `./carafe list`
 - Remove the rufus carafe completely with: `./carafe rufus remove`
+- Copy a carafe to a new location (as a backup for example): `./carafe steam copy steam-backup`
 
 ## Advanced usage
 
@@ -110,7 +113,7 @@ All of them are listed in the output as shown here:
 ```
 usage: carafe {<carafe_name>,list} <sub_command>
 
-Welcome to carafe 0.3.0
+Welcome to carafe 0.4.0-beta
 carafe is a tiny management tool for wine bottles/carafes.
 
 optional arguments:
@@ -119,10 +122,11 @@ optional arguments:
 sub-commands:
   All the valid sub-commands to manage the carafes
 
-  {create,install,start,remove,info,link,shortcut,regedit,winecfg,winetricks}
+  {create,install,start,copy,remove,info,link,shortcut,regedit,winecfg,winetricks}
     create              create a new carafe
     install             install software to the carafe
     start               start an installed program
+    copy                copy an existing carafe
     remove              remove a carafe
     info                all info about a carafe
     link                link a program to the carafe
@@ -217,6 +221,25 @@ optional arguments:
   -l LOCATION, --location LOCATION
                         Location of the executable inside the carafe to start
 ```
+
+#### Copy
+
+With the copy option you can copy an existing carafe to a new location.
+This is useful for backups, and it works like this:
+
+```
+usage: carafe <carafe_name> copy <new_name>
+
+Use 'copy' to duplicate an existing carafe to a new one
+
+positional arguments:
+  newname     Name of the new carafe
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+For example: `./carafe steam copy steam-backup`.
 
 #### Remove
 
