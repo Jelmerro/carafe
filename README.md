@@ -230,7 +230,7 @@ With the rename option you change the name of an existing carafe.
 ```
 usage: carafe <carafe_name> rename <new_name>
 
-Use 'rename' to to change the name of an existing carafe
+Use 'rename' to change the name of an existing carafe
 
 positional arguments:
   newname     New name of the carafe

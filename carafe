@@ -453,7 +453,7 @@ if __name__ == "__main__":
     sub_copy = sub.add_parser(
         "rename", help="rename an existing carafe",
         usage="carafe <carafe_name> rename <new_name>",
-        description="Use 'rename' to to change the name of an existing carafe")
+        description="Use 'rename' to change the name of an existing carafe")
     sub_copy.add_argument("newname", help="New name of the carafe")
     # Copy
     sub_copy = sub.add_parser(
