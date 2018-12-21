@@ -450,11 +450,11 @@ if __name__ == "__main__":
         "-l", "--location",
         help="Location of the executable inside the carafe to start")
     # Rename
-    sub_copy = sub.add_parser(
+    sub_rename = sub.add_parser(
         "rename", help="rename an existing carafe",
         usage="carafe <carafe_name> rename <new_name>",
         description="Use 'rename' to change the name of an existing carafe")
-    sub_copy.add_argument("newname", help="New name of the carafe")
+    sub_rename.add_argument("newname", help="New name of the carafe")
     # Copy
     sub_copy = sub.add_parser(
         "copy", help="copy an existing carafe",
