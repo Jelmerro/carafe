@@ -99,6 +99,9 @@ There is one trade-off to all these advantages:
 
 - A regression in a new version of wine can break compatibility until a new wine version is released
 
+The [wine wiki](https://wiki.winehq.org/FAQ#Which_version_of_Wine_should_I_use.3F) recommends to use a recent or even the latest version of wine,
+which is automatically configured by using carafe.
+
 ### Manage carafe
 
 After running `./carafe` a list of the supported options will shown.
@@ -107,7 +110,7 @@ All of them are listed in the output as shown here:
 ```
 usage: carafe {<carafe_name>,list} <sub_command>
 
-Welcome to carafe 0.3.0-beta
+Welcome to carafe 0.3.0
 carafe is a tiny management tool for wine bottles/carafes.
 
 optional arguments:
@@ -116,7 +119,7 @@ optional arguments:
 sub-commands:
   All the valid sub-commands to manage the carafes
 
-  {create,install,start,remove,info,link,shortcut,winecfg,winetricks}
+  {create,install,start,remove,info,link,shortcut,regedit,winecfg,winetricks}
     create              create a new carafe
     install             install software to the carafe
     start               start an installed program
@@ -124,6 +127,7 @@ sub-commands:
     info                all info about a carafe
     link                link a program to the carafe
     shortcut            generate a desktop shortcut
+    regedit             run regedit
     winecfg             run winecfg
     winetricks          run winetricks
 
@@ -380,34 +384,63 @@ optional arguments:
 Executable location will be asked interactively when not provided as an argument,
 in a fairly similar way as is done for the 'link' command.
 
-Shortcuts won't be automatically deleted when a carafe is deleted.
-
 Some programs might create a desktop shortcut during the installation,
 these type of shortcuts are made by wine and don't need carafe to work.
 
-#### Winecfg and Winetricks
+Shortcuts won't be automatically deleted when a carafe is deleted.
 
-Both of these commands accept no arguments besides `--help`.
+#### Regedit
+
+Example usage of regedit for a Steam carafe looks like this:
+
+`./carafe steam regedit`
+
+To open the regedit for a Steam carafe without using carafe, the following command could be used:
+
+`WINEPREFIX=/home/user/.carafe/steam wine regedit`
+
+This is exactly what carafe will do when asked to invoke regedit,
+but carafe makes sure the winearch and wineprefix are automatically correct.
+
+#### Winecfg
 
 Example usage of winecfg for a Steam carafe looks like this:
 
 `./carafe steam winecfg`
 
-They will directly execute the winecfg or winetricks command respectively.
-In the last paragraph, it's explained how these commands are handled,
-and how you can run them directly without using the carafe interface.
+Running winecfg without carafe works the same as for regedit.
 
-The carafes are created by running prefixed wine commands.
-All features available using wine, winecfg, winetricks or any other tool can be used with carafe.
+#### Winetricks
 
-For example, to open the winecfg for a Steam carafe, the following command could be used:
+Example usage of winetricks for a Steam carafe looks like this:
 
-`WINEPREFIX=~/.carafe/steam winecfg`
+`./carafe steam winetricks`
 
-This is exactly what carafe will do when asked to invoke winecfg,
-but carafe makes sure the arch and wineprefix are automatically correct.
+This will open the winetricks GUI, where a lot of extra components can be installed from.
+To install dxvk for the steam carafe with winetricks, run the command:
 
-The same shortcut is added for winetricks, other tools can use the original wineprefix command.
+`./carafe steam winetricks dxvk`
+
+The help page describes this behavior as follows:
+
+```
+usage: carafe <carafe_name> winetricks <optional_arguments>
+
+Use 'winetricks' to install winetricks components
+
+positional arguments:
+  arguments   Any arguments will directly be passed to winetricks
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+Just like winecfg and regedit, it's also possible to run winetricks commands without carafe:
+
+`WINEPREFIX=/home/user/.carafe/steam winetricks dxvk`
+
+This again means that you need to manually set the wineprefix and winearch to the correct values,
+which is something that the carafe command will handle for you.
 
 In short, carafe is aimed to ease the configuration of wine bottles/carafes,
 without introducing any magic or changing the wine prefix system.
@@ -419,20 +452,32 @@ carafe is pure python and only uses native imports, some of them are python 3.5+
 Wine is the only dependency of carafe and it can even do some management tasks without wine installed (such as remove, info and list).
 Creating and starting the carafes is done by wine, and won't work without it installed.
 
-By default carafe will look for the commands: wine, wineboot and winecfg.
-All of these should automatically be set when installing wine using the package manager.
-carafe will show a warning when wine or the other commands are not found,
+carafe will show a warning when the 'wine' command is not found,
 and offer instructions to resolve the problem.
-For other installation methods an alias might be needed,
+For some installation methods an alias might be needed,
 or you can configure the wine location in the config file.
-You can manually edit the `~/.carafe/config.json` to change the default wine command locations.
+You can manually edit the `~/.carafe/config.json` to change the default wine command location.
 It might be needed to create the config file, as it normally will only be stored when links or special arch types are used.
+The config file also accepts a 'winetricks' field for setting the winetricks location/path separately.
 
 ### Logging
 
 No wine commands executed by carafe will show any output in the terminal.
 The commands will store the log of the latest executed command as `~/.carafe/<carafe_name>/log`.
 carafe does not keep a history of all the logs, only the latest one is stored.
+
+### Wine related files
+
+Wine will create menu shortcuts in `~/.local/share/applications`,
+and store the icons for them in `~/.local/share/icons`.
+The location `~/.local/share/desktop-directories` will also be used,
+along with `~/.config/menus` for menu related files.
+
+These directories are automatically filled with files by wine,
+carafe does not create, modify or remove them.
+
+carafe stores all configuration and the prefixes in `~/.carafe`,
+which will automatically be deleted when all carafes are removed.
 
 ## License
 

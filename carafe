@@ -6,7 +6,7 @@ __author__ = "Jelmer van Arnhem"
 # See README.md for more details and usage instructions
 __license__ = "MIT"
 # See LICENSE for more details and exact terms
-__version__ = "0.3.0-beta"
+__version__ = "0.3.0"
 # See https://github.com/jelmerro/carafe for repo and updates
 
 import argparse
@@ -104,8 +104,6 @@ def check_for_tool(name, location):
 # It's recommended to change them manually in the config file and not here
 conf = read_config()
 WINE = conf.get("wine", "wine")
-WINEBOOT = conf.get("wineboot", "wineboot")
-WINECFG = conf.get("winecfg", "winecfg")
 WINETRICKS = conf.get("winetricks", "winetricks")
 check_for_tool("wine", WINE)
 
@@ -115,8 +113,7 @@ class Carafe:
 
     def __init__(self, name):
         self.name = name
-        self.forbidden_names = [
-            "config.json", "wine", "wineboot", "winecfg", "winetricks"]
+        self.forbidden_names = ["config.json", "wine", "winetricks"]
         if not self.name:
             print("The current name is not allowed because it appears empty")
             sys.exit(1)
@@ -140,8 +137,7 @@ class Carafe:
         remove_config(self.name)
         if self.arch:
             modify_config(self.name, "arch", self.arch)
-        check_for_tool("wineboot", WINEBOOT)
-        self.run_command(f"{WINEBOOT} --init")
+        self.run_command(f"{WINE} wineboot --init")
 
     def install(self, args):
         self.exists()
@@ -248,15 +244,21 @@ class Carafe:
         with open(output_file, "w") as f:
             f.write(shortcut_contents)
 
+    def regedit(self, args):
+        self.exists()
+        self.run_command(f"{WINE} regedit")
+
     def winecfg(self, args):
         self.exists()
-        check_for_tool("winecfg", WINECFG)
-        self.run_command(f"{WINECFG}")
+        self.run_command(f"{WINE} winecfg")
 
     def winetricks(self, args):
         self.exists()
         check_for_tool("winetricks", WINETRICKS)
-        self.run_command(f"{WINETRICKS} --isolate")
+        arg_string = " "
+        for arg in args.arguments:
+            arg_string += f"{arg} "
+        self.run_command(f"{WINETRICKS} {arg_string}")
 
     # Class helper functions
 
@@ -418,12 +420,12 @@ if __name__ == "__main__":
         "-l", "--location",
         help="Location of the executable inside the carafe to start")
     # Remove
-    sub_remove = sub.add_parser(
+    sub.add_parser(
         "remove", help="remove a carafe",
         usage="carafe <carafe_name> remove",
         description="Use 'remove' to delete an existing carafe")
     # Info
-    sub_info = sub.add_parser(
+    sub.add_parser(
         "info", help="all info about a carafe",
         usage="carafe <carafe_name> info",
         description="Use 'info' to print all information about a carafe")
@@ -452,16 +454,24 @@ if __name__ == "__main__":
     sub_shortcut.add_argument(
         "-t", "--type", choices=["carafe", "wine"],
         help="The type of shortcut to make")
+    # Regedit
+    sub.add_parser(
+        "regedit", help="run regedit",
+        usage="carafe <carafe_name> regedit",
+        description="Use 'regedit' to edit the windows registry")
     # Winecfg
-    sub_cfg = sub.add_parser(
+    sub.add_parser(
         "winecfg", help="run winecfg",
         usage="carafe <carafe_name> winecfg",
         description="Use 'winecfg' to configure all wine settings")
     # Winetricks
     sub_tricks = sub.add_parser(
         "winetricks", help="run winetricks",
-        usage="carafe <carafe_name> winetricks",
+        usage="carafe <carafe_name> winetricks <optional_arguments>",
         description="Use 'winetricks' to install winetricks components")
+    sub_tricks.add_argument(
+        "arguments", nargs=argparse.REMAINDER,
+        help="Any arguments will directly be passed to winetricks")
     # Actually handle all the arguments
     args = sys.argv[1:]
     if not args:
