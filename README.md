@@ -219,9 +219,17 @@ Use 'start' to start a program inside an existing carafe
 
 optional arguments:
   -h, --help            show this help message and exit
+  -k, --keep-log        Keep the wine log (can be multiple GBs and will slow
+                        down wine)
   -l LOCATION, --location LOCATION
                         Location of the executable inside the carafe to start
 ```
+
+The start command is the only sub-command which does not save the log by default.
+With the keep log argument, the start command can return to the default behavior for all other commands.
+If `--keep-log` is provided, the log can be found in `~/.carafe/<carafe_name>/log`.
+Keep in mind that this file can be multiple gigabytes after playing for a few hours,
+and that it will cause a performance hit on wine to constantly write logs to disk.
 
 #### Rename
 
@@ -510,6 +518,9 @@ The config file also accepts a 'winetricks' field for setting the winetricks loc
 No wine commands executed by carafe will show any output in the terminal.
 The commands will store the log of the latest executed command as `~/.carafe/<carafe_name>/log`.
 carafe does not keep a history of all the logs, only the latest one is stored.
+The start command will by default disable all logging,
+because these logs can get very large and because it slows down wine.
+To restore the default logging, provide the `--keep-log` argument (see the 'start' option for details).
 
 ### Wine related files
 

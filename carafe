@@ -6,7 +6,7 @@ __author__ = "Jelmer van Arnhem"
 # See README.md for more details and usage instructions
 __license__ = "MIT"
 # See LICENSE for more details and exact terms
-__version__ = "0.4.0"
+__version__ = "1.0.0-beta"
 # See https://github.com/jelmerro/carafe for repo and updates
 
 import argparse
@@ -172,7 +172,17 @@ class Carafe:
             start = self.link_location
         self.arch = self.read_arch()
         path = os.path.join(self.prefix, "drive_c", start)
-        self.run_command(f"{WINE} \"{path}\"", os.path.dirname(path))
+        if args.keep_log:
+            self.run_command(f"{WINE} \"{path}\"", os.path.dirname(path))
+        else:
+            env = os.environ
+            env["WINEPREFIX"] = self.prefix
+            if self.arch:
+                env["WINEARCH"] = self.arch
+            env["WINEDEBUG"] = "-all"
+            subprocess.run(
+                f"{WINE} \"{path}\"", shell=True,
+                cwd=os.path.dirname(path), env=env)
 
     def rename(self, args):
         self.copy(args)
@@ -446,6 +456,9 @@ if __name__ == "__main__":
         "start", help="start an installed program",
         usage="carafe <carafe_name> start",
         description="Use 'start' to start a program inside an existing carafe")
+    sub_start.add_argument(
+        "-k", "--keep-log", action="store_true",
+        help="Keep the wine log (can be multiple GBs and will slow down wine)")
     sub_start.add_argument(
         "-l", "--location",
         help="Location of the executable inside the carafe to start")
