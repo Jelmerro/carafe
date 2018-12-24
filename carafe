@@ -161,7 +161,11 @@ class Carafe:
 
     def start(self, args):
         self.exists()
-        if args.location:
+        if args.ask:
+            start = self.ask_for_executable(True)
+            if start == "link":
+                start = self.link_location
+        elif args.location:
             start = self.try_to_sanitize_location(args.location)
         elif not self.link_location:
             print(
@@ -182,6 +186,7 @@ class Carafe:
             env["WINEDEBUG"] = "-all"
             subprocess.run(
                 f"{WINE} \"{path}\"", shell=True,
+                stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                 cwd=os.path.dirname(path), env=env)
 
     def rename(self, args):
@@ -379,7 +384,7 @@ class Carafe:
         while chosen_app < 0 or chosen_app >= len(executables):
             chosen_app = input(
                 "Choose the number of the application "
-                f"shortcut{link_text}: ").strip()
+                f"location{link_text}: ").strip()
             if chosen_app == "link" and link_text:
                 break
             try:
@@ -459,6 +464,9 @@ if __name__ == "__main__":
     sub_start.add_argument(
         "-k", "--keep-log", action="store_true",
         help="Keep the wine log (can be multiple GBs and will slow down wine)")
+    sub_start.add_argument(
+        "-a", "--ask", action="store_true",
+        help="Instead of starting the link or --location, ask for the path")
     sub_start.add_argument(
         "-l", "--location",
         help="Location of the executable inside the carafe to start")
