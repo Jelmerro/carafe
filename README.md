@@ -22,8 +22,12 @@ carafe is a tiny management tool for wine ~~bottles~~ carafes.
 
 There are two example provided here,
 both of which assume you have the setup stored inside the `~/Downloads` folder.
+It's recommended to read both examples before starting,
+to get a good idea of the different ways to configure carafe.
 
-You might need to make carafe executable with `chmod +x carafe`.
+To start carafe as `./carafe`, you need to make carafe executable with `chmod +x carafe`.
+Alternatively you can run all carafe commands with python instead: `python3 carafe`.
+The first option is used in this readme, because it's shorter.
 
 ### Example for Steam installer
 
@@ -46,6 +50,9 @@ If you don't like the interactive questions, the same can be achieved like this:
 
 It's also possible to skip the link step and start like this: `./carafe steam start -l "Program Files (x86)/Steam/Steam.exe"`.
 The link option is recommended to make the start command easier to use (and shorter).
+Alternatively you could pick a location from a list with this command:
+
+`./carafe steam start --ask` or `./carafe steam start -a` for short.
 
 ### Example for portable rufus
 
@@ -61,9 +68,11 @@ The location for our new rufus carafe is `~/.carafe/rufus/drive_c`.
 
 After copying the files, we can already execute rufus using this command:
 
-`./carafe rufus start -l "C:/rufus.exe"`
+`./carafe rufus start -l "C:/rufus.exe"` or `./carafe rufus start --ask`.
 
-Or create a link to the exe just like we did for Steam:
+The command `./carafe rufus start --ask` will ask the user to pick a location to start.
+
+To create a link to the exe just like we did for Steam:
 
 `./carafe rufus link`
 
@@ -113,7 +122,7 @@ All of them are listed in the output as shown here:
 ```
 usage: carafe {<carafe_name>,list} <sub_command>
 
-Welcome to carafe 0.4.0
+Welcome to carafe 1.0.0-beta
 carafe is a tiny management tool for wine bottles/carafes.
 
 optional arguments:
@@ -205,7 +214,11 @@ For example, the default program of an existing carafe for Steam could be starte
 
 `./carafe steam start`
 
-To run a different program inside the Steam carafe, add the location argument:
+To run a different program inside the Steam carafe, add the ask argument:
+
+`./carafe steam start --ask`
+
+Or use the location argument to start an executable inside the carafe directly:
 
 `./carafe steam start -l "Program Files (x86)/Internet Explorer/iexplore.exe"`
 
@@ -221,6 +234,8 @@ optional arguments:
   -h, --help            show this help message and exit
   -k, --keep-log        Keep the wine log (can be multiple GBs and will slow
                         down wine)
+  -a, --ask             Instead of starting the link or --location, ask for
+                        the path
   -l LOCATION, --location LOCATION
                         Location of the executable inside the carafe to start
 ```
