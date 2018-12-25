@@ -6,7 +6,7 @@ __author__ = "Jelmer van Arnhem"
 # See README.md for more details and usage instructions
 __license__ = "MIT"
 # See LICENSE for more details and exact terms
-__version__ = "1.0.0-beta"
+__version__ = "1.0.0"
 # See https://github.com/jelmerro/carafe for repo and updates
 
 import argparse
@@ -285,7 +285,11 @@ class Carafe:
             shortcut_contents = self.carafe_shortcut(loc)
         else:
             shortcut_contents = self.wine_shortcut(loc)
-        output_file = os.path.join(args.output_folder, f"{self.name}.desktop")
+        if args.name:
+            file_name = f"{args.name}.desktop"
+        else:
+            file_name = f"{self.name}.desktop"
+        output_file = os.path.join(args.output_folder, file_name)
         with open(output_file, "w") as f:
             f.write(shortcut_contents)
 
@@ -514,6 +518,9 @@ if __name__ == "__main__":
         "-o", "--output-folder",
         default=os.path.join(os.path.expanduser("~"), "Desktop"),
         help="Which folder to place the shortcut, default is the user desktop")
+    sub_shortcut.add_argument(
+        "-n", "--name",
+        help="Name of the new shortcut, default is the name of the carafe")
     sub_shortcut.add_argument(
         "-t", "--type", choices=["carafe", "wine"],
         help="The type of shortcut to make")
