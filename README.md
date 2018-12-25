@@ -14,10 +14,6 @@ carafe is a tiny management tool for wine ~~bottles~~ carafes.
 
 (carafe is both the name of the program and for a wine bottle created through this program)
 
-## Note
-
-#### The current command-line interface might be slightly changed, until version 1.0.0 is released
-
 ## Simple usage, get going fast
 
 There are two example provided here,
@@ -122,7 +118,7 @@ All of them are listed in the output as shown here:
 ```
 usage: carafe {<carafe_name>,list} <sub_command>
 
-Welcome to carafe 1.0.0-beta
+Welcome to carafe 1.0.0
 carafe is a tiny management tool for wine bottles/carafes.
 
 optional arguments:
@@ -445,12 +441,24 @@ optional arguments:
   -o OUTPUT_FOLDER, --output-folder OUTPUT_FOLDER
                         Which folder to place the shortcut, default is the
                         user desktop
+  -n NAME, --name NAME  Name of the new shortcut, default is the name of the
+                        carafe
   -t {carafe,wine}, --type {carafe,wine}
                         The type of shortcut to make
 ```
 
 Executable location will be asked interactively when not provided as an argument,
 in a fairly similar way as is done for the 'link' command.
+
+The name of the shortcut will be set to the name of the carafe automatically,
+but it can be changed with the optional --name argument like so:
+
+`./carafe steam shortcut --name "Steam (Windows version)"`
+
+To achieve the same but with no interactive questions,
+the following command could be used to create a carafe shortcut for the linked program:
+
+`./carafe steam shortcut --name "Steam (Windows version)" --type carafe --location link`
 
 Some programs might create a desktop shortcut during the installation,
 these type of shortcuts are made by wine and don't need carafe to work.
