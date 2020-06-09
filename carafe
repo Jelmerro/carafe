@@ -6,7 +6,7 @@ __author__ = "Jelmer van Arnhem"
 # See README.md for more details and usage instructions
 __license__ = "MIT"
 # See LICENSE for more details and exact terms
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 # See https://github.com/jelmerro/carafe for repo and updates
 
 import argparse
@@ -23,7 +23,6 @@ CONFIG_FOLDER = os.path.join(os.path.expanduser("~"), ".carafe")
 
 # CONFIG FILE LOCATION
 # It's recommended to leave this path as is and only change the folder location
-# Read and write function assume the file is directly inside the config folder
 CONFIG_FILE = os.path.join(CONFIG_FOLDER, "config.json")
 
 
@@ -123,6 +122,7 @@ class Carafe:
         self.prefix = os.path.join(CONFIG_FOLDER, self.name)
         self.arch = self.read_arch()
         self.link_location = self.read_link()
+        self.wine = self.read_wine()
 
     # Linked functions directly called from the parser
 
@@ -137,7 +137,7 @@ class Carafe:
         remove_config(self.name)
         if self.arch:
             modify_config(self.name, "arch", self.arch)
-        self.run_command(f"{WINE} wineboot --init")
+        self.run_command(f"{self.wine} wineboot --init")
 
     def install(self, args):
         self.exists()
@@ -155,9 +155,9 @@ class Carafe:
             print("The specified executable could not be found")
             sys.exit(1)
         if executable.endswith(".msi"):
-            self.run_command(f"{WINE} msiexec /i \"{executable}\"")
+            self.run_command(f"{self.wine} msiexec /i \"{executable}\"")
         else:
-            self.run_command(f"{WINE} \"{executable}\"")
+            self.run_command(f"{self.wine} \"{executable}\"")
 
     def start(self, args):
         self.exists()
@@ -176,8 +176,13 @@ class Carafe:
             start = self.link_location
         self.arch = self.read_arch()
         path = os.path.join(self.prefix, "drive_c", start)
+        arg_string = " "
+        for arg in args.arguments:
+            arg_string += f"{arg} "
         if args.keep_log:
-            self.run_command(f"{WINE} \"{path}\"", os.path.dirname(path))
+            self.run_command(
+                f"{self.wine} \"{path}\" {arg_string}",
+                os.path.dirname(path))
         else:
             env = os.environ
             env["WINEPREFIX"] = self.prefix
@@ -185,7 +190,7 @@ class Carafe:
                 env["WINEARCH"] = self.arch
             env["WINEDEBUG"] = "-all"
             subprocess.run(
-                f"{WINE} \"{path}\"", shell=True,
+                f"{self.wine} \"{path}\" {arg_string}", shell=True,
                 stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                 cwd=os.path.dirname(path), env=env)
 
@@ -295,11 +300,11 @@ class Carafe:
 
     def regedit(self, args):
         self.exists()
-        self.run_command(f"{WINE} regedit")
+        self.run_command(f"{self.wine} regedit")
 
     def winecfg(self, args):
         self.exists()
-        self.run_command(f"{WINE} winecfg")
+        self.run_command(f"{self.wine} winecfg")
 
     def winetricks(self, args):
         self.exists()
@@ -325,6 +330,13 @@ class Carafe:
             if "link" in config[self.name]:
                 return config[self.name]["link"]
         return None
+
+    def read_wine(self):
+        config = read_config()
+        if self.name in config:
+            if "wine" in config[self.name]:
+                return config[self.name]["wine"]
+        return WINE
 
     def read_arch(self):
         config = read_config()
@@ -362,7 +374,8 @@ class Carafe:
         windows = os.path.join(drive_c, "windows")
         exe_pattern = os.path.join(drive_c, "**", "*.exe")
         executables = []
-        for exe in glob.glob(exe_pattern, recursive=True):
+        exe_files = sorted(glob.glob(exe_pattern, recursive=True))
+        for exe in exe_files:
             if not exe.startswith(windows):
                 exe = exe.replace(drive_c, "", 1)
                 if exe.startswith("/"):
@@ -418,7 +431,7 @@ class Carafe:
         command = f"env WINEPREFIX=\"{self.prefix}\""
         if self.arch:
             command += " WINEARCH=\"{self.arch}\""
-        command += f" {WINE} \"C:/{loc}\""
+        command += f" {self.wine} \"C:/{loc}\""
         path = os.path.dirname(os.path.join(self.prefix, "drive_c", loc))
         return "#!/usr/bin/env xdg-open\n" \
             "[Desktop Entry]\n" \
@@ -428,8 +441,7 @@ class Carafe:
             f"Path={path}\n"
 
 
-# Main startup steps
-if __name__ == "__main__":
+def main():
     # Prepare the main parser
     description = f"Welcome to carafe {__version__}\n" \
         "carafe is a tiny management tool for wine bottles/carafes.\n"
@@ -474,6 +486,9 @@ if __name__ == "__main__":
     sub_start.add_argument(
         "-l", "--location",
         help="Location of the executable inside the carafe to start")
+    sub_start.add_argument(
+        "arguments", nargs=argparse.REMAINDER,
+        help="Any arguments will directly be passed to the started executable")
     # Rename
     sub_rename = sub.add_parser(
         "rename", help="rename an existing carafe",
@@ -557,3 +572,8 @@ if __name__ == "__main__":
     # Call the correct subcommand on the Carafe class
     carafe = globals()["Carafe"](carafe_name)
     getattr(carafe, subargs.sub)(subargs)
+
+
+# Main startup steps
+if __name__ == "__main__":
+    main()

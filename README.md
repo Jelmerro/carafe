@@ -7,7 +7,7 @@ carafe is a tiny management tool for wine ~~bottles~~ carafes.
 
 - A tiny command-line script to create bottles/carafes for different programs
 - Automatically manages different wine prefixes
-- Always uses system wine, but never changes the default .wine configuration
+- Never changes the default .wine configuration
 - Configure settings for each carafe separately
 - Create shortcuts for installed programs and/or easily start them from the carafe CLI
 - All configuration and carafes are neatly stored in a single folder (and are auto-deleted when all carafes are deleted)
@@ -16,7 +16,7 @@ carafe is a tiny management tool for wine ~~bottles~~ carafes.
 
 ## Simple usage, get going fast
 
-There are two example provided here,
+There are two examples provided here,
 both of which assume you have the setup stored inside the `~/Downloads` folder.
 It's recommended to read both examples before starting,
 to get a good idea of the different ways to configure carafe.
@@ -86,6 +86,21 @@ the most important ones are listed here:
 - Remove the rufus carafe completely with: `./carafe rufus remove`
 - Copy a carafe to a new location (as a backup for example): `./carafe steam copy steam-backup`
 
+### Dependencies
+
+carafe is pure python and only uses native imports, some of them are python 3.5+.
+
+Wine is the only dependency of carafe and it can even do some management tasks without wine installed (such as remove, info and list).
+Creating and starting the carafes is done by wine, and won't work without it installed.
+
+carafe will show a warning when the 'wine' command is not found,
+and offer instructions to resolve the problem.
+For some installation methods an alias might be needed,
+or you can configure the wine location in the config file.
+You can manually edit the `~/.carafe/config.json` to change the default wine command location.
+It might be needed to create the config file, as it normally will only be stored when links or special arch types are used.
+The config file also accepts a 'winetricks' field for setting the winetricks location/path separately.
+
 ## Advanced usage
 
 carafe is a single script which can be started from any location.
@@ -95,8 +110,7 @@ Most testing was done on Linux, but I'm open to pull requests to broaden OS supp
 ### Wine versions
 
 carafe will need wine as the most important dependency.
-Unlike other management tools for wine bottles, carafe does not allow the user to switch between versions.
-Instead it uses the system wine for all carafes.
+By default, the system wine is used for all carafes.
 The following advantages are a direct consequence of this decision:
 
 - All carafes will automatically use the latest/greatest version of wine
@@ -110,6 +124,14 @@ There is one trade-off to all these advantages:
 The [wine wiki](https://wiki.winehq.org/FAQ#Which_version_of_Wine_should_I_use.3F) recommends to use a recent or even the latest version of wine,
 which is automatically configured by using carafe.
 
+#### Changing a wine version
+
+In the rare cases where you want to use a custom wine version,
+you can manually update the carafe config.
+A toplevel "wine" key can be used as the global wine location,
+while a carafe specific "wine" key can be used to override that per carafe.
+The value of the configuration should be an absolute path to the wine executable.
+
 ### Manage carafe
 
 After running `./carafe` a list of the supported options will shown.
@@ -118,7 +140,7 @@ All of them are listed in the output as shown here:
 ```
 usage: carafe {<carafe_name>,list} <sub_command>
 
-Welcome to carafe 1.0.0
+Welcome to carafe 1.1.0
 carafe is a tiny management tool for wine bottles/carafes.
 
 optional arguments:
@@ -520,21 +542,6 @@ which is something that the carafe command will handle for you.
 
 In short, carafe is aimed to ease the configuration of wine bottles/carafes,
 without introducing any magic or changing the wine prefix system.
-
-### Dependencies
-
-carafe is pure python and only uses native imports, some of them are python 3.5+.
-
-Wine is the only dependency of carafe and it can even do some management tasks without wine installed (such as remove, info and list).
-Creating and starting the carafes is done by wine, and won't work without it installed.
-
-carafe will show a warning when the 'wine' command is not found,
-and offer instructions to resolve the problem.
-For some installation methods an alias might be needed,
-or you can configure the wine location in the config file.
-You can manually edit the `~/.carafe/config.json` to change the default wine command location.
-It might be needed to create the config file, as it normally will only be stored when links or special arch types are used.
-The config file also accepts a 'winetricks' field for setting the winetricks location/path separately.
 
 ### Logging
 
