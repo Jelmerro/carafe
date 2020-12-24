@@ -6,7 +6,7 @@ __author__ = "Jelmer van Arnhem"
 # See README.md for more details and usage instructions
 __license__ = "MIT"
 # See LICENSE for more details and exact terms
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 # See https://github.com/jelmerro/carafe for repo and updates
 
 import argparse
@@ -224,14 +224,14 @@ class Carafe:
         except OSError:
             pass
 
-    def remove(self, args):
+    def remove(self, _args):
         remove_config(self.name)
         self.exists()
         shutil.rmtree(self.prefix)
         if not os.listdir(CONFIG_FOLDER):
             shutil.rmtree(CONFIG_FOLDER)
 
-    def info(self, args):
+    def info(self, _args):
         self.exists()
         executables = self.list_executables()
         print(f"All information about carafe '{self.name}':")
@@ -298,11 +298,11 @@ class Carafe:
         with open(output_file, "w") as f:
             f.write(shortcut_contents)
 
-    def regedit(self, args):
+    def regedit(self, _args):
         self.exists()
         self.run_command(f"{self.wine} regedit")
 
-    def winecfg(self, args):
+    def winecfg(self, _args):
         self.exists()
         self.run_command(f"{self.wine} winecfg")
 
