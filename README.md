@@ -21,41 +21,49 @@ both of which assume you have the setup stored inside the `~/Downloads` folder.
 It's recommended to read both examples before starting,
 to get a good idea of the different ways to configure carafe.
 
-To start carafe as `./carafe`, you need to make carafe executable with `chmod +x carafe`.
-Alternatively you can run all carafe commands with python instead: `python3 carafe`.
+To start carafe as `carafe`, you need to install it:
+
+```bash
+git clone https://github.com/Jelmerro/carafe.git
+pip3 install --user --upgrade ./carafe
+```
+
+Alternatively you can run all carafe commands with python instead: `python3 carafe.py`.
 The first option is used in this readme, because it's shorter.
+The `carafe.py` script is all you need to manage carafes,
+you can download and move it wherever you want.
 
 ### Example for Steam installer
 
 The following commands will setup a new carafe with steam installed.
 ```
-./carafe steam create
-./carafe steam install
-./carafe steam link
+carafe steam create
+carafe steam install
+carafe steam link
 ```
-It can now be started by simply running `./carafe steam start`
+It can now be started by simply running `carafe steam start`
 
 If you don't like the interactive questions, the same can be achieved like this:
 
 ```
-./carafe steam create
-./carafe steam install -e ~/Downloads/SteamSetup.exe
-./carafe steam link -l "Program Files (x86)/Steam/Steam.exe"
-./carafe steam start
+carafe steam create
+carafe steam install -e ~/Downloads/SteamSetup.exe
+carafe steam link -l "Program Files (x86)/Steam/Steam.exe"
+carafe steam start
 ```
 
-It's also possible to skip the link step and start like this: `./carafe steam start -l "Program Files (x86)/Steam/Steam.exe"`.
+It's also possible to skip the link step and start like this: `carafe steam start -l "Program Files (x86)/Steam/Steam.exe"`.
 The link option is recommended to make the start command easier to use (and shorter).
 Alternatively you could pick a location from a list with this command:
 
-`./carafe steam start --ask` or `./carafe steam start -a` for short.
+`carafe steam start --ask` or `carafe steam start -a` for short.
 
 ### Example for portable rufus
 
 For portable programs the install step can be skipped.
 The installation steps could be something like this:
 
-`./carafe rufus create`
+`carafe rufus create`
 
 Now copy all the portable program files somewhere to the carafe.
 The location for our new rufus carafe is `~/.carafe/rufus/drive_c`.
@@ -64,27 +72,27 @@ The location for our new rufus carafe is `~/.carafe/rufus/drive_c`.
 
 After copying the files, we can already execute rufus using this command:
 
-`./carafe rufus start -l "C:/rufus.exe"` or `./carafe rufus start --ask`.
+`carafe rufus start -l "C:/rufus.exe"` or `carafe rufus start --ask`.
 
-The command `./carafe rufus start --ask` will ask the user to pick a location to start.
+The command `carafe rufus start --ask` will ask the user to pick a location to start.
 
 To create a link to the exe just like we did for Steam:
 
-`./carafe rufus link`
+`carafe rufus link`
 
 So we can run the rufus.exe like so:
 
-`./carafe rufus start`
+`carafe rufus start`
 
 ### Other options
 
 There are many more sub-commands provided by carafe,
 the most important ones are listed here:
 
-- All info about the Steam carafe: `./carafe steam info`
-- A list of all the carafes: `./carafe list`
-- Remove the rufus carafe completely with: `./carafe rufus remove`
-- Copy a carafe to a new location (as a backup for example): `./carafe steam copy steam-backup`
+- All info about the Steam carafe: `carafe steam info`
+- A list of all the carafes: `carafe list`
+- Remove the rufus carafe completely with: `carafe rufus remove`
+- Copy a carafe to a new location (as a backup for example): `carafe steam copy steam-backup`
 
 ### Dependencies
 
@@ -134,13 +142,13 @@ The value of the configuration should be an absolute path to the wine executable
 
 ### Manage carafe
 
-After running `./carafe` a list of the supported options will shown.
+After running `carafe` a list of the supported options will shown.
 All of them are listed in the output as shown here:
 
 ```
 usage: carafe {<carafe_name>,list} <sub_command>
 
-Welcome to carafe 1.1.0
+Welcome to carafe 1.2.0
 carafe is a tiny management tool for wine bottles/carafes.
 
 optional arguments:
@@ -191,7 +199,7 @@ optional arguments:
   --arch ARCH  Change the default arch, e.g. to win32
 ```
 
-As we did in the example for Steam: `./carafe steam create`.
+As we did in the example for Steam: `carafe steam create`.
 
 There are a couple of restrictions for choosing a name:
 
@@ -226,19 +234,19 @@ optional arguments:
 This option is used to start programs inside a carafe.
 For existing carafes, starting the default/linked program should be as straightforward as:
 
-`./carafe <name_of_carafe> start`
+`carafe <name_of_carafe> start`
 
 For example, the default program of an existing carafe for Steam could be started as:
 
-`./carafe steam start`
+`carafe steam start`
 
 To run a different program inside the Steam carafe, add the ask argument:
 
-`./carafe steam start --ask`
+`carafe steam start --ask`
 
 Or use the location argument to start an executable inside the carafe directly:
 
-`./carafe steam start -l "Program Files (x86)/Internet Explorer/iexplore.exe"`
+`carafe steam start -l "Program Files (x86)/Internet Explorer/iexplore.exe"`
 
 For the above command, an absolute path from the root of the carafe's C: disk is assumed.
 The location argument is required for carafes with no program linked yet.
@@ -280,7 +288,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-For example: `./carafe steam rename steam-backup`.
+For example: `carafe steam rename steam-backup`.
 
 Rename will actually copy the existing carafe and remove the old one.
 Running these two options separately will do exactly the same.
@@ -302,7 +310,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-For example: `./carafe steam copy steam-backup`.
+For example: `carafe steam copy steam-backup`.
 
 #### Remove
 
@@ -330,13 +338,13 @@ To view a list of all the existing carafes, use the list option.
 This option will ignore all arguments after it,
 and will show a list like this:
 
-`./carafe list`
+`carafe list`
 
 ```
 The following carafes are currently configured:
 steam
 rufus
-Run './carafe <carafe_name> info' for more information
+Run 'carafe <carafe_name> info' for more information
 ```
 
 #### Info
@@ -353,14 +361,14 @@ optional arguments:
 ```
 
 For example, to get all info about our steam carafe,
-the command `./carafe steam info` will return the following:
+the command `carafe steam info` will return the following:
 
 ```
 All information about carafe 'steam':
 Configured with default system arch
 No link is currently configured
-When a carafe is linked, you can start the program with './carafe steam start'
-To modify the link, use './carafe steam link'
+When a carafe is linked, you can start the program with 'carafe steam start'
+To modify the link, use 'carafe steam link'
 
 The current list of executables looks like this:
 C:/Program Files (x86)/Internet Explorer/iexplore.exe
@@ -373,7 +381,7 @@ C:/Program Files (x86)/Windows Media Player/wmplayer.exe
 C:/Program Files/Internet Explorer/iexplore.exe
 C:/Program Files/Windows NT/Accessories/wordpad.exe
 C:/Program Files/Windows Media Player/wmplayer.exe
-You can add more with './carafe steam install'
+You can add more with 'carafe steam install'
 ```
 
 #### Link
@@ -393,7 +401,7 @@ optional arguments:
 ```
 
 After running the 'info' option, a message was displayed regarding the linking.
-When running the `./carafe steam link` command now, it will ask us to choose an executable like this:
+When running the `carafe steam link` command now, it will ask us to choose an executable like this:
 
 ```
 0: C:/Program Files (x86)/Internet Explorer/iexplore.exe
@@ -410,15 +418,15 @@ Choose the number of the application shortcut: 4
 ```
 
 After choosing number 4 as the linked application,
-the command `./carafe steam info` now displays the following:
+the command `carafe steam info` now displays the following:
 
 ```
 All information about carafe 'steam':
 Configured with default system arch
 A link for easy startup is configured to the following:
 Program Files (x86)/Steam/Steam.exe
-When a carafe is linked, you can start the program with './carafe steam start'
-To modify the link, use './carafe steam link'
+When a carafe is linked, you can start the program with 'carafe steam start'
+To modify the link, use 'carafe steam link'
 
 The current list of executables looks like this:
 C:/Program Files (x86)/Internet Explorer/iexplore.exe
@@ -431,11 +439,11 @@ C:/Program Files (x86)/Windows Media Player/wmplayer.exe
 C:/Program Files/Internet Explorer/iexplore.exe
 C:/Program Files/Windows NT/Accessories/wordpad.exe
 C:/Program Files/Windows Media Player/wmplayer.exe
-You can add more with './carafe steam install'
+You can add more with 'carafe steam install'
 ```
 
-We can now start steam with `./carafe steam start`,
-or start a different program inside the carafe: `./carafe steam start -l "Program Files/Internet Explorer/iexplore.exe"`.
+We can now start steam with `carafe steam start`,
+or start a different program inside the carafe: `carafe steam start -l "Program Files/Internet Explorer/iexplore.exe"`.
 
 The list of executables is automatically filled with all exe files inside the carafe.
 
@@ -475,12 +483,12 @@ in a fairly similar way as is done for the 'link' command.
 The name of the shortcut will be set to the name of the carafe automatically,
 but it can be changed with the optional --name argument like so:
 
-`./carafe steam shortcut --name "Steam (Windows version)"`
+`carafe steam shortcut --name "Steam (Windows version)"`
 
 To achieve the same but with no interactive questions,
 the following command could be used to create a carafe shortcut for the linked program:
 
-`./carafe steam shortcut --name "Steam (Windows version)" --type carafe --location link`
+`carafe steam shortcut --name "Steam (Windows version)" --type carafe --location link`
 
 Some programs might create a desktop shortcut during the installation,
 these type of shortcuts are made by wine and don't need carafe to work.
@@ -491,7 +499,7 @@ Shortcuts won't be automatically deleted when a carafe is deleted.
 
 Example usage of regedit for a Steam carafe looks like this:
 
-`./carafe steam regedit`
+`carafe steam regedit`
 
 To open the regedit for a Steam carafe without using carafe, the following command could be used:
 
@@ -504,7 +512,7 @@ but carafe makes sure the winearch and wineprefix are automatically correct.
 
 Example usage of winecfg for a Steam carafe looks like this:
 
-`./carafe steam winecfg`
+`carafe steam winecfg`
 
 Running winecfg without carafe works the same as for regedit.
 
@@ -512,12 +520,12 @@ Running winecfg without carafe works the same as for regedit.
 
 Example usage of winetricks for a Steam carafe looks like this:
 
-`./carafe steam winetricks`
+`carafe steam winetricks`
 
 This will open the winetricks GUI, where a lot of extra components can be installed from.
 To install dxvk for the steam carafe with winetricks, run the command:
 
-`./carafe steam winetricks dxvk`
+`carafe steam winetricks dxvk`
 
 The help page describes this behavior as follows:
 
