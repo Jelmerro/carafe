@@ -6,7 +6,7 @@ __author__ = "Jelmer van Arnhem"
 # See README.md for more details and usage instructions
 __license__ = "MIT"
 # See LICENSE for more details and exact terms
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 # See https://github.com/jelmerro/carafe for repo and updates
 
 import argparse
@@ -298,6 +298,15 @@ class Carafe:
         with open(output_file, "w") as f:
             f.write(shortcut_contents)
 
+    def log(self, _args):
+        self.exists()
+        log_file = os.path.join(self.prefix, "log")
+        if os.path.isfile(log_file):
+            with open(log_file) as f:
+                print(f.read())
+        else:
+            print(f"No logs for '{self.name}' carafe yet")
+
     def regedit(self, _args):
         self.exists()
         self.run_command(f"{self.wine} regedit")
@@ -350,9 +359,10 @@ class Carafe:
         env["WINEPREFIX"] = self.prefix
         if self.arch:
             env["WINEARCH"] = self.arch
-        with open(os.path.join(self.prefix, "log"), "wb") as log:
+        with open(os.path.join(self.prefix, "log"), "wb") as log_file:
             subprocess.run(
-                command, shell=True, stderr=log, stdout=log, cwd=cwd, env=env)
+                command, shell=True, stderr=log_file, stdout=log_file,
+                cwd=cwd, env=env)
 
     def try_to_sanitize_location(self, loc):
         loc = loc.strip()
@@ -450,7 +460,7 @@ def main():
         usage=usage,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=description,
-        epilog=f"carafe was made by {__author__} and is MIT licensed"
+        epilog=f"carafe was made by {__author__} and is {__license__} licensed"
                "\nFor documentation and other information, see the README.md")
     # Sub commands parser
     sub = parser.add_subparsers(
@@ -525,7 +535,7 @@ def main():
         usage="carafe <carafe_name> shortcut",
         description="Use 'shortcut' to create a .desktop shortcut to a carafe")
     location_help = "Location of the executable inside the carafe to " \
-        "shortcut. Normally a path, but can be set to 'link' as well."
+        "shortcut, normally a path, but can be set to 'link' as well"
     sub_shortcut.add_argument(
         "-l", "--location",
         help=location_help)
@@ -539,6 +549,11 @@ def main():
     sub_shortcut.add_argument(
         "-t", "--type", choices=["carafe", "wine"],
         help="The type of shortcut to make")
+    # Log
+    sub.add_parser(
+        "log", help="show the last command output",
+        usage="carafe <carafe_name> log <new_name>",
+        description="Use 'log' to show the output of the last command")
     # Regedit
     sub.add_parser(
         "regedit", help="run regedit",

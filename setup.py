@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="carafe",
-    version="1.2.0",
+    version="1.3.0",
     author="Jelmer van Arnhem",
     description="carafe is a tiny management tool for wine bottles/carafes",
     license="MIT",

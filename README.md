@@ -148,7 +148,7 @@ All of them are listed in the output as shown here:
 ```
 usage: carafe {<carafe_name>,list} <sub_command>
 
-Welcome to carafe 1.2.0
+Welcome to carafe 1.3.0
 carafe is a tiny management tool for wine bottles/carafes.
 
 optional arguments:
@@ -167,6 +167,7 @@ sub-commands:
     info                all info about a carafe
     link                link a program to the carafe
     shortcut            generate a desktop shortcut
+    log                 show the last command output
     regedit             run regedit
     winecfg             run winecfg
     winetricks          run winetricks
@@ -271,6 +272,7 @@ With the keep log argument, the start command can return to the default behavior
 If `--keep-log` is provided, the log can be found in `~/.carafe/<carafe_name>/log`.
 Keep in mind that this file can be multiple gigabytes after playing for a few hours,
 and that it will cause a performance hit on wine to constantly write logs to disk.
+You can also show the contents of the log file with the 'log' option.
 
 #### Rename
 
@@ -495,6 +497,15 @@ these type of shortcuts are made by wine and don't need carafe to work.
 
 Shortcuts won't be automatically deleted when a carafe is deleted.
 
+#### Log
+
+Example usage of log for a Steam carafe looks like this:
+
+`carafe steam log`
+
+This will show the output of the last wine, winetricks or winecfg command.
+It simply reads and prints the file that is stored at `~/.carafe/<carafe_name>/log`.
+
 #### Regedit
 
 Example usage of regedit for a Steam carafe looks like this:
@@ -554,6 +565,7 @@ without introducing any magic or changing the wine prefix system.
 ### Logging
 
 No wine commands executed by carafe will show any output in the terminal.
+You can view the latest log using the 'log' option or by reading the 'log' file inside the carafe.
 The commands will store the log of the latest executed command as `~/.carafe/<carafe_name>/log`.
 carafe does not keep a history of all the logs, only the latest one is stored.
 The start command will by default disable all logging,
