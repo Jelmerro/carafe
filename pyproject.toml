@@ -1,0 +1,11 @@
+[project]
+name="carafe"
+version="1.4.0"
+authors=[{name="Jelmer van Arnhem"}]
+description="carafe is a tiny management tool for wine bottles/carafes"
+license={text="MIT"}
+requires-python=">=3.5"
+[tool.setuptools]
+include-package-data=true
+[project.scripts]
+carafe="carafe:main"

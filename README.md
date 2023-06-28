@@ -148,7 +148,7 @@ All of them are listed in the output as shown here:
 ```
 usage: carafe {<carafe_name>,list} <sub_command>
 
-Welcome to carafe 1.3.0
+Welcome to carafe 1.4.0
 carafe is a tiny management tool for wine bottles/carafes.
 
 optional arguments:

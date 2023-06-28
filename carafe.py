@@ -6,7 +6,7 @@ __author__ = "Jelmer van Arnhem"
 # See README.md for more details and usage instructions
 __license__ = "MIT"
 # See LICENSE for more details and exact terms
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 # See https://github.com/jelmerro/carafe for repo and updates
 
 import argparse
