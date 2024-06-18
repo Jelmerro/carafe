@@ -24,8 +24,7 @@ to get a good idea of the different ways to configure carafe.
 To start carafe as `carafe`, you need to install it:
 
 ```bash
-git clone https://github.com/Jelmerro/carafe.git
-pip3 install --user --upgrade ./carafe
+pip install --user -I git+https://github.com/Jelmerro/carafe
 ```
 
 Alternatively you can run all carafe commands with python instead: `python3 carafe.py`.
