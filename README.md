@@ -14,12 +14,7 @@ carafe is a tiny management tool for wine ~~bottles~~ carafes.
 
 (carafe is both the name of the program and for a wine bottle created through this program)
 
-## Simple usage, get going fast
-
-There are two examples provided here,
-both of which assume you have the setup stored inside the `~/Downloads` folder.
-It's recommended to read both examples before starting,
-to get a good idea of the different ways to configure carafe.
+## Installation
 
 To start carafe as `carafe`, you need to install it:
 
@@ -31,6 +26,24 @@ Alternatively you can run all carafe commands with python instead: `python3 cara
 The first option is used in this readme, because it's shorter.
 The `carafe.py` script is all you need to manage carafes,
 you can download and move it wherever you want.
+
+### Fedora
+
+I host a custom DNF repository that you can use for carafe and some of my other programs.
+
+```bash
+sudo dnf config-manager addrepo --from-repofile=https://jelmerro.nl/fedora/jelmerro.repo
+sudo dnf install carafe
+```
+
+You still need Python 3 for this installation method, but not pip.
+
+## Examples
+
+There are two main examples provided here,
+both of which assume you have the setup stored inside the `~/Downloads` folder.
+It's recommended to read both examples before starting,
+to get a good idea of the different ways to configure carafe.
 
 ### Example for Steam installer
 
@@ -586,6 +599,6 @@ which will automatically be deleted when all carafes are removed.
 
 ## License
 
-carafe itself is made by [Jelmer van Arnhem](https://github.com/jelmerro) and is licensed as MIT, see LICENSE for details.
+carafe itself is made by [Jelmer van Arnhem](https://github.com/Jelmerro) and is licensed as MIT, see LICENSE for details.
 
-Dependencies such as wine have no relation to carafe and are be covered by different licenses.
+Dependencies such as wine have no relation to carafe and are covered by different licenses.
