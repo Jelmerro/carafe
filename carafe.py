@@ -6,7 +6,7 @@ __author__ = "Jelmer van Arnhem"
 # See README.md for more details and usage instructions
 __license__ = "MIT"
 # See LICENSE for more details and exact terms
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 # See https://github.com/jelmerro/carafe for repo and updates
 
 import argparse
@@ -32,7 +32,7 @@ def read_config():
         return {}
     if not os.path.isfile(CONFIG_FILE):
         return {}
-    with open(CONFIG_FILE) as f:
+    with open(CONFIG_FILE, encoding="utf-8") as f:
         config = json.load(f)
     if config == {}:
         try:
@@ -51,7 +51,7 @@ def remove_config(name):
         except OSError:
             pass
     else:
-        with open(CONFIG_FILE, "w") as f:
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(config, f)
 
 
@@ -61,7 +61,7 @@ def modify_config(name, field, value):
         config[name] = {}
     config[name][field] = value
     os.makedirs(CONFIG_FOLDER, exist_ok=True)
-    with open(CONFIG_FILE, "w") as f:
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(config, f)
 
 
@@ -295,14 +295,14 @@ class Carafe:
         else:
             file_name = f"{self.name}.desktop"
         output_file = os.path.join(args.output_folder, file_name)
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             f.write(shortcut_contents)
 
     def log(self, _args):
         self.exists()
         log_file = os.path.join(self.prefix, "log")
         if os.path.isfile(log_file):
-            with open(log_file) as f:
+            with open(log_file, encoding="utf-8") as f:
                 print(f.read())
         else:
             print(f"No logs for '{self.name}' carafe yet")
@@ -318,9 +318,7 @@ class Carafe:
     def winetricks(self, args):
         self.exists()
         check_for_tool("winetricks", WINETRICKS)
-        arg_string = " "
-        for arg in args.arguments:
-            arg_string += f"{arg} "
+        arg_string = " ".join(args.arguments)
         self.run_command(f"{WINETRICKS} {arg_string}")
 
     # Class helper functions
@@ -359,9 +357,10 @@ class Carafe:
         env["WINEPREFIX"] = self.prefix
         if self.arch:
             env["WINEARCH"] = self.arch
-        with open(os.path.join(self.prefix, "log"), "wb") as log_file:
+        log_file = os.path.join(self.prefix, "log")
+        with open(log_file, "wb", encoding="utf-8") as output:
             subprocess.run(
-                command, shell=True, stderr=log_file, stdout=log_file,
+                command, shell=True, stderr=output, stdout=output,
                 cwd=cwd, env=env)
 
     def try_to_sanitize_location(self, loc):

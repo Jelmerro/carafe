@@ -128,7 +128,7 @@ There is one trade-off to all these advantages:
 
 - A regression in a new version of wine can break compatibility until a new wine version is released
 
-The [wine wiki](https://wiki.winehq.org/FAQ#Which_version_of_Wine_should_I_use.3F) recommends to use a recent or even the latest version of wine,
+The [wine wiki](https://gitlab.winehq.org/wine/wine/-/wikis/FAQ#which-version-of-wine-should-i-use) recommends to use a recent or even the latest version of wine,
 which is automatically configured by using carafe.
 
 #### Changing a wine version
@@ -147,7 +147,7 @@ All of them are listed in the output as shown here:
 ```
 usage: carafe {<carafe_name>,list} <sub_command>
 
-Welcome to carafe 1.4.0
+Welcome to carafe 1.5.0
 carafe is a tiny management tool for wine bottles/carafes.
 
 optional arguments:
