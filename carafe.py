@@ -6,7 +6,7 @@ __author__ = "Jelmer van Arnhem"
 # See README.md for more details and usage instructions
 __license__ = "MIT"
 # See LICENSE for more details and exact terms
-__version__ = "1.5.0"
+__version__ = "1.5.1"
 # See https://github.com/jelmerro/carafe for repo and updates
 
 import argparse
@@ -176,9 +176,7 @@ class Carafe:
             start = self.link_location
         self.arch = self.read_arch()
         path = os.path.join(self.prefix, "drive_c", start)
-        arg_string = " "
-        for arg in args.arguments:
-            arg_string += f"{arg} "
+        arg_string = " ".join(args.arguments)
         if args.keep_log:
             self.run_command(
                 f"{self.wine} \"{path}\" {arg_string}",
@@ -358,7 +356,7 @@ class Carafe:
         if self.arch:
             env["WINEARCH"] = self.arch
         log_file = os.path.join(self.prefix, "log")
-        with open(log_file, "wb", encoding="utf-8") as output:
+        with open(log_file, "wb") as output:
             subprocess.run(
                 command, shell=True, stderr=output, stdout=output,
                 cwd=cwd, env=env)

@@ -1,6 +1,6 @@
 [project]
 name="carafe"
-version="1.5.0"
+version="1.5.1"
 authors=[{name="Jelmer van Arnhem"}]
 description="carafe is a tiny management tool for wine bottles/carafes"
 license={text="MIT"}
