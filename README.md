@@ -14,29 +14,44 @@ carafe is a tiny management tool for wine ~~bottles~~ carafes.
 
 (carafe is both the name of the program and for a wine bottle created through this program)
 
-## Installation
+## Install
 
-To start carafe as `carafe`, you need to install it:
+### Pip
 
 ```bash
 pip install --user -I git+https://github.com/Jelmerro/carafe
 ```
 
-Alternatively you can run all carafe commands with python instead: `python3 carafe.py`.
-The first option is used in this readme, because it's shorter.
-The `carafe.py` script is all you need to manage carafes,
-you can download and move it wherever you want.
+### Python
 
-### Fedora
+Download or clone the repo, then run `python carafe.py` directly.
 
-I host a custom DNF repository that you can use for carafe and some of my other programs.
+### [Github](https://github.com/Jelmerro/carafe/releases)
+
+Download a stable installer or executable for your platform from Github.
+
+### [Fedora](https://jelmerro.nl/fedora)
+
+I host a custom Fedora repository that you can use for automatic updates.
 
 ```bash
 sudo dnf config-manager addrepo --from-repofile=https://jelmerro.nl/fedora/jelmerro.repo
 sudo dnf install carafe
 ```
 
-You still need Python 3 for this installation method, but not pip.
+## Contribute
+
+You can support my work on [ko-fi](https://ko-fi.com/Jelmerro) or [Github sponsors](https://github.com/sponsors/Jelmerro).
+Another way to help is to report issues or suggest new features.
+Please try to follow recommendations by flake8 and pylint when developing.
+For an example vimrc that can auto-format based on the included linters,
+you can check out my personal [vimrc](https://github.com/Jelmerro/vimrc).
+
+## Building
+
+To create your own builds you can use [jfpm](https://github.com/Jelmerro/jfpm).
+Please clone or download both this repo and jfpm, then run `../jfpm/release_py_simple.sh`.
+This will build releases for various platforms and output them to `dist`.
 
 ## Examples
 
@@ -160,16 +175,16 @@ All of them are listed in the output as shown here:
 ```
 usage: carafe {<carafe_name>,list} <sub_command>
 
-Welcome to carafe 1.5.1
+Welcome to carafe 1.6.0
 carafe is a tiny management tool for wine bottles/carafes.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
 
 sub-commands:
   All the valid sub-commands to manage the carafes
 
-  {create,install,start,rename,copy,remove,info,link,shortcut,regedit,winecfg,winetricks}
+  {create,install,start,rename,copy,remove,info,link,shortcut,log,regedit,winecfg,winetricks}
     create              create a new carafe
     install             install software to the carafe
     start               start an installed program
@@ -596,9 +611,3 @@ carafe does not create, modify or remove them.
 
 carafe stores all configuration and the prefixes in `~/.carafe`,
 which will automatically be deleted when all carafes are removed.
-
-## License
-
-carafe itself is made by [Jelmer van Arnhem](https://github.com/Jelmerro) and is licensed as MIT, see LICENSE for details.
-
-Dependencies such as wine have no relation to carafe and are covered by different licenses.
