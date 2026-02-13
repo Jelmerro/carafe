@@ -175,7 +175,7 @@ All of them are listed in the output as shown here:
 ```
 usage: carafe {<carafe_name>,list} <sub_command>
 
-Welcome to carafe 1.6.0
+Welcome to carafe 1.7.0
 carafe is a tiny management tool for wine bottles/carafes.
 
 options:
@@ -185,19 +185,19 @@ sub-commands:
   All the valid sub-commands to manage the carafes
 
   {create,install,start,rename,copy,remove,info,link,shortcut,log,regedit,winecfg,winetricks}
-    create              create a new carafe
-    install             install software to the carafe
-    start               start an installed program
-    rename              rename an existing carafe
-    copy                copy an existing carafe
-    remove              remove a carafe
-    info                all info about a carafe
-    link                link a program to the carafe
-    shortcut            generate a desktop shortcut
-    log                 show the last command output
-    regedit             run regedit
-    winecfg             run winecfg
-    winetricks          run winetricks
+    create              Create a new carafe
+    install             Install software to the carafe
+    start               Start an installed program
+    rename              Rename an existing carafe
+    copy                Copy an existing carafe
+    remove              Remove a carafe
+    info                All info about a carafe
+    link                Link a program to the carafe
+    shortcut            Generate a desktop shortcut
+    log                 Show the last command output
+    regedit             Run regedit
+    winecfg             Run winecfg
+    winetricks          Run winetricks
 
 carafe was made by Jelmer van Arnhem and is MIT licensed
 For documentation and other information, see the README.md
@@ -223,8 +223,9 @@ usage: carafe <carafe_name> create
 Use 'create' to make a new carafe, you should start here
 
 optional arguments:
-  -h, --help   show this help message and exit
-  --arch ARCH  Change the default arch, e.g. to win32
+  -h, --help     show this help message and exit
+  --arch ARCH    Change the default arch, e.g. to win32
+  -v, --verbose  Print the wine log to the screen (log file is always written)
 ```
 
 As we did in the example for Steam: `carafe steam create`.
@@ -252,9 +253,11 @@ Use 'install' to run an external exe/msi inside the carafe
 
 optional arguments:
   -h, --help            show this help message and exit
-  -e EXECUTABLE, --executable EXECUTABLE
+  -e, --executable EXECUTABLE
                         Location of the external executable to run inside the
                         carafe
+  -v, --verbose         Print the wine log to the screen (log file is always
+                        written)
 ```
 
 #### Start
@@ -288,9 +291,11 @@ optional arguments:
   -h, --help            show this help message and exit
   -k, --keep-log        Keep the wine log (can be multiple GBs and will slow
                         down wine)
+  -v, --verbose         Keep the wine log and print it to screen (will slow down
+                        wine)
   -a, --ask             Instead of starting the link or --location, ask for
                         the path
-  -l LOCATION, --location LOCATION
+  -l, --location LOCATION
                         Location of the executable inside the carafe to start
 ```
 
@@ -532,6 +537,7 @@ Example usage of log for a Steam carafe looks like this:
 
 This will show the output of the last wine, winetricks or winecfg command.
 It simply reads and prints the file that is stored at `~/.carafe/<carafe_name>/log`.
+If you want to view logs for a command as it happens, consider using `-v` or `--verbose`.
 
 #### Regedit
 
@@ -576,7 +582,8 @@ positional arguments:
   arguments   Any arguments will directly be passed to winetricks
 
 optional arguments:
-  -h, --help  show this help message and exit
+  -h, --help     show this help message and exit
+  -v, --verbose  Print the wine log to the screen (log file is always written)
 ```
 
 Just like winecfg and regedit, it's also possible to run winetricks commands without carafe:
@@ -598,6 +605,8 @@ carafe does not keep a history of all the logs, only the latest one is stored.
 The start command will by default disable all logging,
 because these logs can get very large and because it slows down wine.
 To restore the default logging, provide the `--keep-log` argument (see the 'start' option for details).
+For commands that interact with wine or winetricks, you can also use `-v` or `--verbose` to show the logs.
+This will always write to the log file too, so for the start command `--keep-log` is redundant with `-v`.
 
 ### Wine related files
 

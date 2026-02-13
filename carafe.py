@@ -6,7 +6,7 @@ __author__ = "Jelmer van Arnhem"
 # See README.md for more details and usage instructions
 __license__ = "MIT"
 # See LICENSE for more details and exact terms
-__version__ = "1.6.0"
+__version__ = "1.7.0"
 # See https://github.com/jelmerro/carafe for repo and updates
 
 import argparse
@@ -137,7 +137,7 @@ class Carafe:
         remove_config(self.name)
         if self.arch:
             modify_config(self.name, "arch", self.arch)
-        self.run_command(f"{self.wine} wineboot --init")
+        self.run_command(f"{self.wine} wineboot --init", args.verbose)
 
     def install(self, args):
         self.exists()
@@ -155,9 +155,10 @@ class Carafe:
             print("The specified executable could not be found")
             sys.exit(1)
         if executable.endswith(".msi"):
-            self.run_command(f"{self.wine} msiexec /i \"{executable}\"")
+            self.run_command(
+                f"{self.wine} msiexec /i \"{executable}\"", args.verbose)
         else:
-            self.run_command(f"{self.wine} \"{executable}\"")
+            self.run_command(f"{self.wine} \"{executable}\"", args.verbose)
 
     def start(self, args):
         self.exists()
@@ -177,10 +178,10 @@ class Carafe:
         self.arch = self.read_arch()
         path = os.path.join(self.prefix, "drive_c", start)
         arg_string = " ".join(args.arguments)
-        if args.keep_log:
+        if args.keep_log or args.verbose:
             self.run_command(
                 f"{self.wine} \"{path}\" {arg_string}",
-                os.path.dirname(path))
+                args.verbose, cwd=os.path.dirname(path))
         else:
             env = os.environ
             env["WINEPREFIX"] = self.prefix
@@ -305,19 +306,19 @@ class Carafe:
         else:
             print(f"No logs for '{self.name}' carafe yet")
 
-    def regedit(self, _args):
+    def regedit(self, args):
         self.exists()
-        self.run_command(f"{self.wine} regedit")
+        self.run_command(f"{self.wine} regedit", args.verbose)
 
-    def winecfg(self, _args):
+    def winecfg(self, args):
         self.exists()
-        self.run_command(f"{self.wine} winecfg")
+        self.run_command(f"{self.wine} winecfg", args.verbose)
 
     def winetricks(self, args):
         self.exists()
         check_for_tool("winetricks", WINETRICKS)
         arg_string = " ".join(args.arguments)
-        self.run_command(f"{WINETRICKS} {arg_string}")
+        self.run_command(f"{WINETRICKS} {arg_string}", args.verbose)
 
     # Class helper functions
 
@@ -350,12 +351,33 @@ class Carafe:
                 return config[self.name]["arch"]
         return None
 
-    def run_command(self, command, cwd=None):
+    def run_command(self, command, verbose, cwd=None):
         env = os.environ
         env["WINEPREFIX"] = self.prefix
         if self.arch:
             env["WINEARCH"] = self.arch
         log_file = os.path.join(self.prefix, "log")
+        if verbose:
+            with open(log_file, "w", encoding="utf-8") as output:
+                proc = subprocess.Popen(
+                    command, shell=True, stderr=subprocess.STDOUT, text=True,
+                    stdout=subprocess.PIPE, bufsize=1, cwd=cwd, env=env)
+                try:
+                    for line in proc.stdout:
+                        sys.stdout.write(line)
+                        sys.stdout.flush()
+                        output.write(line)
+                        output.flush()
+                finally:
+                    rest = proc.stdout.read()
+                    if rest:
+                        sys.stdout.write(rest)
+                        sys.stdout.flush()
+                        output.write(rest)
+                        output.flush()
+                    proc.stdout.close()
+                    proc.wait()
+            return
         with open(log_file, "wb") as output:
             subprocess.run(
                 command, shell=True, stderr=output, stdout=output,
@@ -454,9 +476,8 @@ def main():
         "carafe is a tiny management tool for wine bottles/carafes.\n"
     usage = "carafe {<carafe_name>,list} <sub_command>"
     parser = argparse.ArgumentParser(
-        usage=usage,
+        usage=usage, description=description,
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=description,
         epilog=f"carafe was made by {__author__} and is {__license__} licensed"
                "\nFor documentation and other information, see the README.md")
     # Sub commands parser
@@ -465,28 +486,37 @@ def main():
         description="All the valid sub-commands to manage the carafes")
     # Create
     sub_create = sub.add_parser(
-        "create", help="create a new carafe",
+        "create", help="Create a new carafe",
         usage="carafe <carafe_name> create",
         description="Use 'create' to make a new carafe, you should start here")
     sub_create.add_argument(
         "--arch", help="Change the default arch, e.g. to win32")
+    sub_create.add_argument(
+        "-v", "--verbose", action="store_true",
+        help="Print the wine log to the screen (log file is always written)")
     # Install
     sub_install = sub.add_parser(
-        "install", help="install software to the carafe",
+        "install", help="Install software to the carafe",
         usage="carafe <carafe_name> install",
         description="Use 'install' to run an ext"
                     "ernal exe/msi inside the carafe")
     sub_install.add_argument(
         "-e", "--executable",
         help="Location of the external executable to run inside the carafe")
+    sub_install.add_argument(
+        "-v", "--verbose", action="store_true",
+        help="Print the wine log to the screen (log file is always written)")
     # Start
     sub_start = sub.add_parser(
-        "start", help="start an installed program",
+        "start", help="Start an installed program",
         usage="carafe <carafe_name> start",
         description="Use 'start' to start a program inside an existing carafe")
     sub_start.add_argument(
         "-k", "--keep-log", action="store_true",
         help="Keep the wine log (can be multiple GBs and will slow down wine)")
+    sub_start.add_argument(
+        "-v", "--verbose", action="store_true",
+        help="Keep the wine log and print it to screen (will slow down wine)")
     sub_start.add_argument(
         "-a", "--ask", action="store_true",
         help="Instead of starting the link or --location, ask for the path")
@@ -498,29 +528,29 @@ def main():
         help="Any arguments will directly be passed to the started executable")
     # Rename
     sub_rename = sub.add_parser(
-        "rename", help="rename an existing carafe",
+        "rename", help="Rename an existing carafe",
         usage="carafe <carafe_name> rename <new_name>",
         description="Use 'rename' to change the name of an existing carafe")
     sub_rename.add_argument("newname", help="New name of the carafe")
     # Copy
     sub_copy = sub.add_parser(
-        "copy", help="copy an existing carafe",
+        "copy", help="Copy an existing carafe",
         usage="carafe <carafe_name> copy <new_name>",
         description="Use 'copy' to duplicate an existing carafe to a new one")
     sub_copy.add_argument("newname", help="Name of the new carafe")
     # Remove
     sub.add_parser(
-        "remove", help="remove a carafe",
+        "remove", help="Remove a carafe",
         usage="carafe <carafe_name> remove",
         description="Use 'remove' to delete an existing carafe")
     # Info
     sub.add_parser(
-        "info", help="all info about a carafe",
+        "info", help="All info about a carafe",
         usage="carafe <carafe_name> info",
         description="Use 'info' to print all information about a carafe")
     # Link
     sub_link = sub.add_parser(
-        "link", help="link a program to the carafe",
+        "link", help="Link a program to the carafe",
         usage="carafe <carafe_name> link",
         description="Use 'link' to connect the startup link (recommended)")
     sub_link.add_argument(
@@ -528,7 +558,7 @@ def main():
         help="Location of the executable inside the carafe to link")
     # Shortcut
     sub_shortcut = sub.add_parser(
-        "shortcut", help="generate a desktop shortcut",
+        "shortcut", help="Generate a desktop shortcut",
         usage="carafe <carafe_name> shortcut",
         description="Use 'shortcut' to create a .desktop shortcut to a carafe")
     location_help = "Location of the executable inside the carafe to " \
@@ -548,24 +578,33 @@ def main():
         help="The type of shortcut to make")
     # Log
     sub.add_parser(
-        "log", help="show the last command output",
+        "log", help="Show the last command output",
         usage="carafe <carafe_name> log <new_name>",
         description="Use 'log' to show the output of the last command")
     # Regedit
-    sub.add_parser(
-        "regedit", help="run regedit",
+    sub_regedit = sub.add_parser(
+        "regedit", help="Run regedit",
         usage="carafe <carafe_name> regedit",
         description="Use 'regedit' to edit the windows registry")
+    sub_regedit.add_argument(
+        "-v", "--verbose", action="store_true",
+        help="Print the wine log to the screen (log file is always written)")
     # Winecfg
-    sub.add_parser(
-        "winecfg", help="run winecfg",
+    sub_winecfg = sub.add_parser(
+        "winecfg", help="Run winecfg",
         usage="carafe <carafe_name> winecfg",
         description="Use 'winecfg' to configure all wine settings")
+    sub_winecfg.add_argument(
+        "-v", "--verbose", action="store_true",
+        help="Print the wine log to the screen (log file is always written)")
     # Winetricks
     sub_tricks = sub.add_parser(
-        "winetricks", help="run winetricks",
+        "winetricks", help="Run winetricks",
         usage="carafe <carafe_name> winetricks <optional_arguments>",
         description="Use 'winetricks' to install winetricks components")
+    sub_tricks.add_argument(
+        "-v", "--verbose", action="store_true",
+        help="Print the wine log to the screen (log file is always written)")
     sub_tricks.add_argument(
         "arguments", nargs=argparse.REMAINDER,
         help="Any arguments will directly be passed to winetricks")
